@@ -1,0 +1,28 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+    <div>
+
+        @using(Html.BeginForm("init","Jobs", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+        <input type="text" name="subscriptionName" placeholder="subscription name" />
+            <br />
+        <input type="text" name="url" placeholder="url" />
+        <br />
+        <p>Select .publishsettings file:</p>
+        <input type="file" name="fileBase" />
+            <br />
+        <input type="submit" value="Init scheluder jobs"/>
+        }
+    </div>
+</body>
+</html>

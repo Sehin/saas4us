@@ -19,6 +19,8 @@ namespace MvcWebRole1.Models
         public DbSet<TagsInContent> TagsInContents { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<ClientLike> ClientLikes { get; set; }
+        public DbSet<ClientRepost> ClientReposts { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
