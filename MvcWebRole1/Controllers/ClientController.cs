@@ -176,9 +176,32 @@ namespace MvcWebRole1.Controllers
 
                         }
                     }
+                    
+                    #endregion
+                    #region repost
+                    List<int> repostForPost = VKWorker.getRepostIdsFromPost(group.ID_GROUP, cig.ID_POST);
+                    foreach (int clientVkId in repostForPost)   // Для каждого id ищем клиента в БД
+                    {
+                        try
+                        {
+                            Client client = db.Clients.Where(c => c.ID_VK == clientVkId).Single();  // Exception если нет
+                            int a = db.ClientReposts.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
+                            if (a == 0)
+                            {
+                                ClientRepost clR = new ClientRepost(cig.ID_CIG, client.ID_CL);
+                                db.ClientReposts.Add(clR);
+                            }
+                        }
+                        catch (Exception e)  // Нет такого клиента в БД О_О
+                        {
+                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
+                            Client client = addNewClientByVKId(clientVkId, sa); // Добавили такого клиента в БД
+                            ClientRepost clR = new ClientRepost(cig.ID_CIG, client.ID_CL);
+                            db.ClientReposts.Add(clR);
+                        }
+                    }
                     db.SaveChanges();
                     #endregion
-
                 }
             }
 
@@ -186,7 +209,7 @@ namespace MvcWebRole1.Controllers
             
 
         }
-
+        
         public Client addNewClientByVKId(int idVk, SocAccount sa)
         {
             DatabaseContext db = new DatabaseContext();
@@ -393,6 +416,8 @@ namespace MvcWebRole1.Controllers
         }
         public static Client getClientById(int id, SocAccount sa)
         {
+            if (id < 0)
+                return null;
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
             String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate&access_token=" + sa.TOKEN + "&user_ids=" + id);
@@ -512,6 +537,42 @@ namespace MvcWebRole1.Controllers
                     ids.Add(int.Parse(jtoken.ToString()));
                 }
                 catch(Exception e)
+                {
+                    break;
+                }
+                counter++;
+                if (counter == 1000)
+                {
+                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 1000);
+                    obj = JObject.Parse(answer);
+                    jtoken = obj["response"]["users"].First;
+                    counterM += 1;
+                    counter = 0;
+                }
+                else
+                    jtoken = jtoken.Next;
+
+            } while (jtoken != null);
+
+            return ids;
+        }
+        public static List<int> getRepostIdsFromPost(int groupId, int postId)
+        {
+            List<int> ids = new List<int>();
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&filter=copies&type=post&owner_id=-" + groupId + "&item_id=" + postId);
+            JObject obj = JObject.Parse(answer);
+            JToken jtoken = obj["response"]["users"].First;
+            int counter = 0;
+            int counterM = 1;
+            do
+            {
+                try
+                {
+                    ids.Add(int.Parse(jtoken.ToString()));
+                }
+                catch (Exception e)
                 {
                     break;
                 }
