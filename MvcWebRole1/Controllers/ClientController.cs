@@ -150,7 +150,7 @@ namespace MvcWebRole1.Controllers
                 }
                 foreach (ContentInGroup cig in lastNCigs)
                 {
-              /*      #region likes
+                    #region likes
                     //todo Для каждого CIG запилить бы отдельный Thread.. к вопросу о быстродействии :)
                     List<int> likesForPost = VKWorker.getLikeIdsFromPost(group.ID_GROUP, cig.ID_POST);
                     foreach (int clientVkId in likesForPost)
@@ -202,7 +202,7 @@ namespace MvcWebRole1.Controllers
                         }
                     }
                     #endregion
-*/
+
                     #region comments
                     List<Tuple<int, int>> commentIdsForPost = VKWorker.getCommentIdsFromPost(group.ID_GROUP, cig.ID_POST);
 
@@ -226,7 +226,6 @@ namespace MvcWebRole1.Controllers
                             Client client = addNewClientByVKId(tpl.Item1, sa); // Добавили такого клиента в БД
                             ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
                             db.ClientComments.Add(clC);
-                            Console.WriteLine(":)");
                         }
                     }
 
