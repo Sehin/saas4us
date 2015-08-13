@@ -148,11 +148,9 @@ namespace MvcWebRole1.Controllers
                     lastNCigs.Add(latestCig);
                     cigs.Remove(latestCig);
                 }
-
-                
                 foreach (ContentInGroup cig in lastNCigs)
                 {
-                    #region likes
+              /*      #region likes
                     //todo Для каждого CIG запилить бы отдельный Thread.. к вопросу о быстродействии :)
                     List<int> likesForPost = VKWorker.getLikeIdsFromPost(group.ID_GROUP, cig.ID_POST);
                     foreach (int clientVkId in likesForPost)
@@ -178,10 +176,13 @@ namespace MvcWebRole1.Controllers
                     }
                     
                     #endregion
+
                     #region repost
                     List<int> repostForPost = VKWorker.getRepostIdsFromPost(group.ID_GROUP, cig.ID_POST);
                     foreach (int clientVkId in repostForPost)   // Для каждого id ищем клиента в БД
                     {
+                        if (clientVkId < 0)
+                            continue;
                         try
                         {
                             Client client = db.Clients.Where(c => c.ID_VK == clientVkId).Single();  // Exception если нет
@@ -200,6 +201,34 @@ namespace MvcWebRole1.Controllers
                             db.ClientReposts.Add(clR);
                         }
                     }
+                    #endregion
+*/
+                    #region comments
+                    List<Tuple<int, int>> commentIdsForPost = VKWorker.getCommentIdsFromPost(group.ID_GROUP, cig.ID_POST);
+
+                    foreach(Tuple<int,int> tpl in commentIdsForPost)
+                    {
+                        if (tpl.Item1 < 0)
+                            continue;
+                        try
+                        {
+                            Client client = db.Clients.Where(c => c.ID_VK == tpl.Item1).Single();  // Exception если нет
+                            int a = db.ClientReposts.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
+                            if (a == 0)
+                            {
+                                ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
+                                db.ClientComments.Add(clC);
+                            }
+                        }
+                        catch (Exception e)  // Нет такого клиента в БД О_О
+                        {
+                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
+                            Client client = addNewClientByVKId(tpl.Item1, sa); // Добавили такого клиента в БД
+                            ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
+                            db.ClientComments.Add(clC);
+                        }
+                    }
+
                     db.SaveChanges();
                     #endregion
                 }
@@ -213,6 +242,8 @@ namespace MvcWebRole1.Controllers
         public Client addNewClientByVKId(int idVk, SocAccount sa)
         {
             DatabaseContext db = new DatabaseContext();
+            if (idVk < 0)
+                return null;
             try
             {
                 Client cl = db.Clients.Where(c => c.ID_VK == idVk).Single(); // Если такой клиент уже найден - false
@@ -231,6 +262,7 @@ namespace MvcWebRole1.Controllers
         {
             //VKWorker.getPostIdsFromGroup(30022666);
             //       VKWorker.getLikeIdsFromPost(30022666, 115376);
+            //VKWorker.getCommentIdsFromPost(87953130, 53);
         }
         private List<List<int>> splitList(List<int> list, int size)
         {
@@ -579,7 +611,7 @@ namespace MvcWebRole1.Controllers
                 counter++;
                 if (counter == 1000)
                 {
-                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 1000);
+                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&filter=copies&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 1000);
                     obj = JObject.Parse(answer);
                     jtoken = obj["response"]["users"].First;
                     counterM += 1;
@@ -592,5 +624,79 @@ namespace MvcWebRole1.Controllers
 
             return ids;
         }
+        /*public static List<int> getCommentIdsFromPost(int groupId, int postId)
+        {
+            List<int> ids = new List<int>();
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String answer = wc.DownloadString("https://api.vk.com/method/wall.getComments?count=100&owner_id=-" + groupId + "&post_id=" + postId);
+            JObject obj = JObject.Parse(answer);
+            JToken jtoken = obj["response"].First.Next;
+            int counter = 0;
+            int counterM = 1;
+            do
+            {
+                try
+                {
+                    ids.Add(int.Parse(jtoken["from_id"].ToString()));
+                }
+                catch (Exception e)
+                {
+                    break;
+                }
+                counter++;
+                if (counter == 100)
+                {
+                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=100&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 100);
+                    obj = JObject.Parse(answer);
+                    jtoken = obj["response"].First.Next;
+                    counterM += 1;
+                    counter = 0;
+                }
+                else
+                    jtoken = jtoken.Next;
+
+            } while (jtoken != null);
+
+            return ids;
+        }*/
+        public static List<Tuple<int,int>> getCommentIdsFromPost(int groupId, int postId)
+        {
+            List<Tuple<int,int>> ids = new List<Tuple<int,int>>();
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String answer = wc.DownloadString("https://api.vk.com/method/wall.getComments?count=100&owner_id=-" + groupId + "&post_id=" + postId);
+            JObject obj = JObject.Parse(answer);
+            JToken jtoken = obj["response"].First.Next;
+            int counter = 0;
+            int counterM = 1;
+            do
+            {
+                try
+                {
+                    Tuple<int,int> tpl = new Tuple<int,int>(int.Parse(jtoken["from_id"].ToString()),int.Parse(jtoken["cid"].ToString()));
+                    ids.Add(tpl);
+                }
+                catch (Exception e)
+                {
+                    break;
+                }
+                counter++;
+                if (counter == 100)
+                {
+                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=100&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 100);
+                    obj = JObject.Parse(answer);
+                    jtoken = obj["response"].First.Next;
+                    counterM += 1;
+                    counter = 0;
+                }
+                else
+                    jtoken = jtoken.Next;
+
+            } while (jtoken != null);
+
+            return ids;
+        }
+
     }
 }

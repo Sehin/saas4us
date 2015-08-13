@@ -20,6 +20,7 @@ namespace MvcWebRole1.Models
         public DbSet<Client> Clients { get; set; }
         public DbSet<ClientLike> ClientLikes { get; set; }
         public DbSet<ClientRepost> ClientReposts { get; set; }
+        public DbSet<ClientComment> ClientComments { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -214,6 +214,7 @@
     </Compile>
     <Compile Include="Models\AccountModels.cs" />
     <Compile Include="Models\Client.cs" />
+    <Compile Include="Models\ClientComment.cs" />
     <Compile Include="Models\ClientLike.cs" />
     <Compile Include="Models\ClientRepost.cs" />
     <Compile Include="Models\Content.cs" />
