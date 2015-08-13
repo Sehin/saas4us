@@ -226,6 +226,7 @@ namespace MvcWebRole1.Controllers
                             Client client = addNewClientByVKId(tpl.Item1, sa); // Добавили такого клиента в БД
                             ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
                             db.ClientComments.Add(clC);
+                            Console.WriteLine(":)");
                         }
                     }
 
