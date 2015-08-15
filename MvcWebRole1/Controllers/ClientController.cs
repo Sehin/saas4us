@@ -22,6 +22,27 @@ namespace MvcWebRole1.Controllers
 
             return View();
         }
+        public void updateSocClients_FB() // обновляем клиентов из Facebook
+        {
+            DatabaseContext db = new DatabaseContext();
+            List<SocAccount> socAccs = db.SocAccounts.Where(q => q.SOCNET_TYPE == 1).ToList();
+            List<MvcWebRole1.Models.Group> groups = new List<MvcWebRole1.Models.Group>();
+            // подгрузили соцакки для Facebook
+
+            foreach (SocAccount sa in socAccs)
+            {
+                groups.AddRange(db.Groups.Where(q => q.ID_AC == sa.ID_AC).ToList());
+            }
+
+            foreach (MvcWebRole1.Models.Group group in groups)
+            {
+
+            }
+
+        }
+
+
+        
 
         // Метод, который обновляет клиентов из соц сети VK
         public void updateSocClients()
@@ -263,6 +284,7 @@ namespace MvcWebRole1.Controllers
             //VKWorker.getPostIdsFromGroup(30022666);
             //       VKWorker.getLikeIdsFromPost(30022666, 115376);
             //VKWorker.getCommentIdsFromPost(87953130, 53);
+            FBWorker.getGroupSubscribersIds("439902082843443", "CAACEdEose0cBAHdDUIhsjYRZBFznSZCFSjEEa5fXN0g8xkXZAJNWeo0rZAPipDODlSuQN3vZCOnMjcuXCrsBFSL4VCx5uO53oSy9M4NRtceI2Wn7WN1yoTGyHQ2hV33EGzRUgrh5Fv5fAT0rMcIc1ZCqdATAr1lrnamS4zKPmNhS31EVaHlf50gj89Lho6APEvkvhXwPTCVgcrg92DQA2b");
         }
         private List<List<int>> splitList(List<int> list, int size)
         {
@@ -376,6 +398,30 @@ namespace MvcWebRole1.Controllers
             return d1.CompareTo(d2);
         }
     }
+
+    public static class FBWorker
+    {
+        public static List<string> getGroupSubscribersIds (string _groupId, string _accessToken)
+        {
+            int offset = 0;
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String result = wc.DownloadString("https://graph.facebook.com/v2.4/"+_groupId+"/members?fields=id&offset="+offset+"&limit=100&access_token="+_accessToken);
+            JObject obj = JObject.Parse(result);
+            JToken jtoken = obj["data"].First;
+
+            List<string> IDs = new List<string>();
+            do
+            {
+                IDs.Add((string)jtoken["id"]);
+                jtoken = jtoken.Next;
+            }
+            while (jtoken != null);
+
+            return IDs;
+        }
+    }
+
     public static class VKWorker
     {
         public static List<int> getGroupSubscribersIds(int groupId)
