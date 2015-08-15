@@ -47,7 +47,6 @@ namespace MvcWebRole1.Controllers
                 {
                     clientIds.Add(client.ID_VK);
                 }
-
                 List<int> idsToRemove = new List<int>();
                 for (int i = 0; i < ids.Count; i++)
                 {

@@ -45,7 +45,6 @@ namespace MvcWebRole1.Controllers
 
                Console.WriteLine(result.Status);
                Console.WriteLine(result.HttpStatusCode);
-
            }
             catch(Exception e){}
 
