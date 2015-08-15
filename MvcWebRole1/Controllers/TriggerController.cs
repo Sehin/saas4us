@@ -28,6 +28,12 @@ namespace MvcWebRole1.Controllers
                 MarkProgram mp = db.MarkPrograms.Where(m => m.ID_PR == trigger.ID_PR).Single();
                 int userId = mp.ID_USER;
 
+
+                if (t1.CL_AGE_SIGN!=-1)
+                {
+                    
+
+                }
                 List<Client> clients = db.Clients.Where(c => c.ID_USER == userId).ToList();
 
                 
