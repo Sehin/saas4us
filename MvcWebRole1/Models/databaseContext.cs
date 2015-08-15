@@ -25,7 +25,7 @@ namespace MvcWebRole1.Models
         public DbSet<MarkProgram> MarkPrograms { get; set; }
         public DbSet<Trigger> Triggers { get; set; }
         public DbSet<TriggerT1> TriggersT1 { get; set; }
-
+        public DbSet<ClientInMP> ClientInMp { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
