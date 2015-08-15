@@ -209,6 +209,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\JobsController.cs" />
+    <Compile Include="Controllers\TriggerController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -227,6 +228,7 @@
     <Compile Include="Models\SocAccount.cs" />
     <Compile Include="Models\Tags.cs" />
     <Compile Include="Models\TagsInContent.cs" />
+    <Compile Include="Models\Triggers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebRole.cs" />
   </ItemGroup>

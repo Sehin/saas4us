@@ -22,6 +22,10 @@ namespace MvcWebRole1.Models
         public DbSet<ClientRepost> ClientReposts { get; set; }
         public DbSet<ClientComment> ClientComments { get; set; }
 
+        public DbSet<MarkProgram> MarkPrograms { get; set; }
+        public DbSet<Trigger> Triggers { get; set; }
+        public DbSet<TriggerT1> TriggersT1 { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
