@@ -41,6 +41,9 @@ namespace MvcWebRole1.Controllers
 
         }
 
+
+        
+
         // Метод, который обновляет клиентов из соц сети VK
         public void updateSocClients()
         {
@@ -55,18 +58,18 @@ namespace MvcWebRole1.Controllers
 
             foreach (MvcWebRole1.Models.Group group in groups)
             {
-                List<String> ids = VKWorker.getGroupSubscribersIds(group.ID_GROUP);
+                List<int> ids = VKWorker.getGroupSubscribersIds(group.ID_GROUP);
                 SocAccount sa = db.SocAccounts.Where(g => g.ID_AC == group.ID_AC).Single();
 
                 #region Отсеиваем только новых клиентов
                 List<Client> clients = db.Clients.ToList(); // Получение списка всех клиентов
-                List<String> clientIds = new List<String>();
+                List<int> clientIds = new List<int>();
                 foreach (Client client in clients)
                 {
                     clientIds.Add(client.ID_VK);
                 }
 
-                List<String> idsToRemove = new List<String>();
+                List<int> idsToRemove = new List<int>();
                 for (int i = 0; i < ids.Count; i++)
                 {
                     for (int q = 0; q < clientIds.Count; q++)
@@ -90,7 +93,7 @@ namespace MvcWebRole1.Controllers
                     }
                     if (isLeave)
                     {
-                        String clId = clientIds[i];
+                        int clId = clientIds[i];
                         Client client = db.Clients.Where(c => c.ID_VK == clId).Single();
                         DateTime tl = new DateTime(0001, 01, 01);
                         if (client.DATE_LEAVE.Equals(tl))
@@ -101,7 +104,7 @@ namespace MvcWebRole1.Controllers
                 }
 
                 // Удаление уже присутствующих id
-                foreach (String id in idsToRemove)
+                foreach (int id in idsToRemove)
                 {
                     ids.Remove(id);
                 }
@@ -111,9 +114,9 @@ namespace MvcWebRole1.Controllers
                 // В случае если ids.count > i, то необходимо разбить его на отдельные list, чтобы можно было проводить запрос к api
                 if (ids.Count > 0)
                 {
-                    List<List<String>> ids_ = splitList(ids, 400);
+                    List<List<int>> ids_ = splitList(ids, 400);
 
-                    foreach (List<String> list in ids_)
+                    foreach (List<int> list in ids_)
                     {
                         // Преобразуем list в строку вида "id, id, id" для дальнейшего запроса к api
                         String sIds = listToString(list);
@@ -170,18 +173,10 @@ namespace MvcWebRole1.Controllers
                 {
                     #region likes
                     //todo Для каждого CIG запилить бы отдельный Thread.. к вопросу о быстродействии :)
-                    List<String> likesForPost = VKWorker.getLikeIdsFromPost(group.ID_GROUP, cig.ID_POST);
-                    foreach (String clientVkId in likesForPost)
+                    List<int> likesForPost = VKWorker.getLikeIdsFromPost(group.ID_GROUP, cig.ID_POST);
+                    foreach (int clientVkId in likesForPost)
                     {
-                        int isHaveThisClient = db.Clients.Where(c => c.ID_VK == clientVkId).Count();
-                        if (isHaveThisClient == 0) // Нет такого клиента
-                        {
-                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
-                            Client client = addNewClientByVKId(clientVkId, sa); // Добавили такого клиента в БД
-                            ClientLike clL = new ClientLike(cig.ID_CIG, client.ID_CL);
-                            db.ClientLikes.Add(clL);
-                        }
-                        else // Есть такой клиент
+                        try
                         {
                             Client client = db.Clients.Where(c => c.ID_VK == clientVkId).Single();
                             int a = db.ClientLikes.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
@@ -191,25 +186,25 @@ namespace MvcWebRole1.Controllers
                                 db.ClientLikes.Add(clL);
                             }
                         }
-                    }
-
-                    #endregion
-
-                    #region repost
-                    List<String> repostForPost = VKWorker.getRepostIdsFromPost(group.ID_GROUP, cig.ID_POST);
-                    foreach (String clientVkId in repostForPost)   // Для каждого id ищем клиента в БД
-                    {
-                        if (Int64.Parse(clientVkId) < 0)
-                            continue;
-                        int isHaveThisClient = db.Clients.Where(c => c.ID_VK == clientVkId).Count();
-                        if (isHaveThisClient == 0) // Нет такого клиента
+                        catch (Exception e)  // Нет такого клиента в БД О_О
                         {
                             SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
                             Client client = addNewClientByVKId(clientVkId, sa); // Добавили такого клиента в БД
-                            ClientRepost clR = new ClientRepost(cig.ID_CIG, client.ID_CL);
-                            db.ClientReposts.Add(clR);
+                            ClientLike clL = new ClientLike(cig.ID_CIG, client.ID_CL);
+                            db.ClientLikes.Add(clL);
+
                         }
-                        else
+                    }
+                    
+                    #endregion
+
+                    #region repost
+                    List<int> repostForPost = VKWorker.getRepostIdsFromPost(group.ID_GROUP, cig.ID_POST);
+                    foreach (int clientVkId in repostForPost)   // Для каждого id ищем клиента в БД
+                    {
+                        if (clientVkId < 0)
+                            continue;
+                        try
                         {
                             Client client = db.Clients.Where(c => c.ID_VK == clientVkId).Single();  // Exception если нет
                             int a = db.ClientReposts.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
@@ -219,25 +214,24 @@ namespace MvcWebRole1.Controllers
                                 db.ClientReposts.Add(clR);
                             }
                         }
+                        catch (Exception e)  // Нет такого клиента в БД О_О
+                        {
+                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
+                            Client client = addNewClientByVKId(clientVkId, sa); // Добавили такого клиента в БД
+                            ClientRepost clR = new ClientRepost(cig.ID_CIG, client.ID_CL);
+                            db.ClientReposts.Add(clR);
+                        }
                     }
                     #endregion
 
                     #region comments
-                    List<Tuple<String, int>> commentIdsForPost = VKWorker.getCommentIdsFromPost(group.ID_GROUP, cig.ID_POST);
+                    List<Tuple<int, int>> commentIdsForPost = VKWorker.getCommentIdsFromPost(group.ID_GROUP, cig.ID_POST);
 
-                    foreach (Tuple<String, int> tpl in commentIdsForPost)
+                    foreach(Tuple<int,int> tpl in commentIdsForPost)
                     {
-                        if (Int64.Parse(tpl.Item1) < 0)
+                        if (tpl.Item1 < 0)
                             continue;
-                        int isHaveThisClient = db.Clients.Where(c => c.ID_VK == tpl.Item1).Count();
-                        if (isHaveThisClient == 0) // Нет такого клиента
-                        {
-                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
-                            Client client = addNewClientByVKId(tpl.Item1, sa); // Добавили такого клиента в БД
-                            ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
-                            db.ClientComments.Add(clC);
-                        }
-                        else
+                        try
                         {
                             Client client = db.Clients.Where(c => c.ID_VK == tpl.Item1).Single();  // Exception если нет
                             int a = db.ClientReposts.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
@@ -247,6 +241,13 @@ namespace MvcWebRole1.Controllers
                                 db.ClientComments.Add(clC);
                             }
                         }
+                        catch (Exception e)  // Нет такого клиента в БД О_О
+                        {
+                            SocAccount sa = db.SocAccounts.Where(s => s.ID_AC == group.ID_AC).Single();
+                            Client client = addNewClientByVKId(tpl.Item1, sa); // Добавили такого клиента в БД
+                            ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
+                            db.ClientComments.Add(clC);
+                        }
                     }
 
                     db.SaveChanges();
@@ -255,21 +256,21 @@ namespace MvcWebRole1.Controllers
             }
 
 
-
+            
 
         }
-
-        public Client addNewClientByVKId(String idVk, SocAccount sa)
+        
+        public Client addNewClientByVKId(int idVk, SocAccount sa)
         {
             DatabaseContext db = new DatabaseContext();
-            if (Int64.Parse(idVk) < 0)
+            if (idVk < 0)
                 return null;
             try
             {
                 Client cl = db.Clients.Where(c => c.ID_VK == idVk).Single(); // Если такой клиент уже найден - false
                 return null;
             }
-            catch (Exception e)  // Создаем нового
+            catch(Exception e)  // Создаем нового
             {
                 Client client = VKWorker.getClientById(idVk, sa);
                 db.Clients.Add(client);
@@ -283,23 +284,23 @@ namespace MvcWebRole1.Controllers
             //VKWorker.getPostIdsFromGroup(30022666);
             //       VKWorker.getLikeIdsFromPost(30022666, 115376);
             //VKWorker.getCommentIdsFromPost(87953130, 53);
-            //FBWorker.getGroupSubscribersIds("439902082843443", "CAACEdEose0cBAHdDUIhsjYRZBFznSZCFSjEEa5fXN0g8xkXZAJNWeo0rZAPipDODlSuQN3vZCOnMjcuXCrsBFSL4VCx5uO53oSy9M4NRtceI2Wn7WN1yoTGyHQ2hV33EGzRUgrh5Fv5fAT0rMcIc1ZCqdATAr1lrnamS4zKPmNhS31EVaHlf50gj89Lho6APEvkvhXwPTCVgcrg92DQA2b");
+            FBWorker.getGroupSubscribersIds("439902082843443", "CAACEdEose0cBAHdDUIhsjYRZBFznSZCFSjEEa5fXN0g8xkXZAJNWeo0rZAPipDODlSuQN3vZCOnMjcuXCrsBFSL4VCx5uO53oSy9M4NRtceI2Wn7WN1yoTGyHQ2hV33EGzRUgrh5Fv5fAT0rMcIc1ZCqdATAr1lrnamS4zKPmNhS31EVaHlf50gj89Lho6APEvkvhXwPTCVgcrg92DQA2b");
         }
-        private List<List<String>> splitList(List<String> list, int size)
+        private List<List<int>> splitList(List<int> list, int size)
         {
             if (list.Count < size)  // Если размер листа меньше минимального, возвращаем его
             {
-                List<List<String>> rList = new List<List<String>>();
+                List<List<int>> rList = new List<List<int>>();
                 rList.Add(list);
                 return rList;
             }
             else
             {
-                List<List<String>> rList = new List<List<String>>();
+                List<List<int>> rList = new List<List<int>>();
                 int i = 0;
                 while (i < list.Count)
                 {
-                    List<String> smallList;
+                    List<int> smallList;
                     try
                     {
                         smallList = list.GetRange(i, size);
@@ -314,7 +315,7 @@ namespace MvcWebRole1.Controllers
                 return rList;
             }
         }
-        private String listToString(List<String> list)
+        private String listToString(List<int> list)
         {
             String rList = "";
             for (int i = 0; i < list.Count; i++)
@@ -344,7 +345,7 @@ namespace MvcWebRole1.Controllers
                 {
                     db.Contents.Where(c => c.CONTENT_TYPE == -1).Single();
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
                     Content content = new Content(sa.ID_USER, "", "", -1);
                     db.Contents.Add(content);
@@ -356,7 +357,7 @@ namespace MvcWebRole1.Controllers
             {
                 int idMasterContent = db.Contents.Where(c => c.CONTENT_TYPE == -1).Single().ID_CO;
                 // Для каждой группы получаем список CIG
-                List<ContentInGroup> cigsFromVk = VKWorker.getCIGfromGroup(group.ID_GROUP, group.ID, idMasterContent);
+                List<ContentInGroup> cigsFromVk = VKWorker.getCIGfromGroup(group.ID_GROUP,group.ID,idMasterContent);
 
                 //List<int> postIds = VKWorker.getPostIdsFromGroup(group.ID_GROUP);
 
@@ -400,12 +401,12 @@ namespace MvcWebRole1.Controllers
 
     public static class FBWorker
     {
-        public static List<string> getGroupSubscribersIds(string _groupId, string _accessToken)
+        public static List<string> getGroupSubscribersIds (string _groupId, string _accessToken)
         {
             int offset = 0;
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            String result = wc.DownloadString("https://graph.facebook.com/v2.4/" + _groupId + "/members?fields=id&offset=" + offset + "&limit=100&access_token=" + _accessToken);
+            String result = wc.DownloadString("https://graph.facebook.com/v2.4/"+_groupId+"/members?fields=id&offset="+offset+"&limit=100&access_token="+_accessToken);
             JObject obj = JObject.Parse(result);
             JToken jtoken = obj["data"].First;
 
@@ -423,7 +424,7 @@ namespace MvcWebRole1.Controllers
 
     public static class VKWorker
     {
-        public static List<String> getGroupSubscribersIds(String groupId)
+        public static List<int> getGroupSubscribersIds(int groupId)
         {
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
@@ -431,10 +432,10 @@ namespace MvcWebRole1.Controllers
             JObject obj = JObject.Parse(answer);
             JToken jtoken = obj["response"]["users"].First;
 
-            List<String> ids = new List<String>();
+            List<int> ids = new List<int>();
             do
             {
-                ids.Add(jtoken.ToString());
+                ids.Add((int)jtoken);
                 jtoken = jtoken.Next;
             }
             while (jtoken != null);
@@ -446,13 +447,61 @@ namespace MvcWebRole1.Controllers
             List<Client> clients = new List<Client>();
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate,sex&access_token=" + sa.TOKEN + "&user_ids=" + ids);
+            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate&access_token=" + sa.TOKEN + "&user_ids="+ids);
             JObject obj = JObject.Parse(answer);
             JToken jtoken = obj["response"].First;
             do
             {
                 String name = jtoken["first_name"].ToString() + " " + jtoken["last_name"];
+                
+#region bday parse
+                DateTime birthday = new DateTime(0001, 01, 01);
+                try
+                {
+                    String bday = jtoken["bdate"].ToString();
 
+                    String regex = @"(\d*)\.(\d*)\.(\d*)"; 
+                    Match m = Regex.Match(bday, regex);
+                    if (m.Success)
+                    {
+                        birthday = new DateTime(Int16.Parse(m.Groups[3].ToString()), Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
+                    }
+                    else
+                    {
+                        regex = @"(\d*)\.(\d*)";
+                        m = Regex.Match(bday, regex);
+                        if (m.Success)
+                        {
+                            birthday = new DateTime(9999, Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    birthday = new DateTime(0001, 01, 01);
+                }
+#endregion
+                int vkId = int.Parse(jtoken["uid"].ToString());
+                DateTime time_come = DateTime.Now;
+                DateTime time_leave = new DateTime(0001, 01, 01);
+                Client client = new Client(sa.ID_USER,name,birthday,0,vkId,-1,time_come,"", time_leave);
+                clients.Add(client);
+                jtoken = jtoken.Next;
+            }
+            while (jtoken != null);
+            return clients;
+        }
+        public static Client getClientById(int id, SocAccount sa)
+        {
+            if (id < 0)
+                return null;
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate&access_token=" + sa.TOKEN + "&user_ids=" + id);
+            JObject obj = JObject.Parse(answer);
+            JToken jtoken = obj["response"].First;
+                String name = jtoken["first_name"].ToString() + " " + jtoken["last_name"];
                 #region bday parse
                 DateTime birthday = new DateTime(0001, 01, 01);
                 try
@@ -481,69 +530,19 @@ namespace MvcWebRole1.Controllers
                     birthday = new DateTime(0001, 01, 01);
                 }
                 #endregion
-                String vkId = jtoken["uid"].ToString();
+                int vkId = int.Parse(jtoken["uid"].ToString());
                 DateTime time_come = DateTime.Now;
                 DateTime time_leave = new DateTime(0001, 01, 01);
-                int sex = (int)jtoken["sex"];
-                Client client = new Client(sa.ID_USER, name, birthday, 0, vkId, "-1", time_come, "", time_leave, sex);
-                clients.Add(client);
+                Client client = new Client(sa.ID_USER, name, birthday, 0, vkId, -1, time_come, "", time_leave);
                 jtoken = jtoken.Next;
-            }
-            while (jtoken != null);
-            return clients;
-        }
-        public static Client getClientById(String id, SocAccount sa)
-        {
-            if (Int64.Parse(id) < 0)
-                return null;
-            WebClient wc = new WebClient();
-            wc.Encoding = Encoding.UTF8;
-            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate,sex&access_token=" + sa.TOKEN + "&user_ids=" + id);
-            JObject obj = JObject.Parse(answer);
-            JToken jtoken = obj["response"].First;
-            String name = jtoken["first_name"].ToString() + " " + jtoken["last_name"];
-            #region bday parse
-            DateTime birthday = new DateTime(0001, 01, 01);
-            try
-            {
-                String bday = jtoken["bdate"].ToString();
-
-                String regex = @"(\d*)\.(\d*)\.(\d*)";
-                Match m = Regex.Match(bday, regex);
-                if (m.Success)
-                {
-                    birthday = new DateTime(Int16.Parse(m.Groups[3].ToString()), Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
-                }
-                else
-                {
-                    regex = @"(\d*)\.(\d*)";
-                    m = Regex.Match(bday, regex);
-                    if (m.Success)
-                    {
-                        birthday = new DateTime(9999, Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
-                    }
-                }
-
-            }
-            catch (Exception e)
-            {
-                birthday = new DateTime(0001, 01, 01);
-            }
-            #endregion
-            String vkId = jtoken["uid"].ToString();
-            DateTime time_come = DateTime.Now;
-            DateTime time_leave = new DateTime(0001, 01, 01);
-            int sex = (int)jtoken["sex"];
-            Client client = new Client(sa.ID_USER, name, birthday, 0, vkId, "-1", time_come, "", time_leave, sex);
-            jtoken = jtoken.Next;
-            return client;
+                return client;
         }
         public static List<int> getPostIdsFromGroup(int groupId)
         {
             List<int> ids = new List<int>();
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            String answer = wc.DownloadString("https://api.vk.com/method/wall.get?count=100&owner_id=-" + groupId);
+            String answer = wc.DownloadString("https://api.vk.com/method/wall.get?count=100&owner_id=-"+groupId);
             JObject obj = JObject.Parse(answer);
             JToken jtoken = obj["response"].First;
             int count = int.Parse(jtoken.ToString());
@@ -555,7 +554,7 @@ namespace MvcWebRole1.Controllers
                 ids.Add(int.Parse(jtoken["id"].ToString()));
                 jtoken = jtoken.Next;
                 counter++;
-                if (counter == 100)
+                if (counter==100)
                 {
                     answer = wc.DownloadString("https://api.vk.com/method/wall.get?count=100&owner_id=-" + groupId + "&offset=" + counterM * 100);
                     obj = JObject.Parse(answer);
@@ -567,7 +566,7 @@ namespace MvcWebRole1.Controllers
             } while (jtoken != null);
             return ids;
         }
-        public static List<ContentInGroup> getCIGfromGroup(String groupId, int groupIdBD, int idMasterContent)
+        public static List<ContentInGroup> getCIGfromGroup(int groupId, int groupIdBD,int idMasterContent)
         {
             List<ContentInGroup> cigs = new List<ContentInGroup>();
             WebClient wc = new WebClient();
@@ -598,23 +597,24 @@ namespace MvcWebRole1.Controllers
             } while (jtoken != null);
             return cigs;
         }
-        public static List<String> getLikeIdsFromPost(String groupId, int postId)
+        public static List<int> getLikeIdsFromPost(int groupId, int postId)
         {
-            List<String> ids = new List<String>();
+            List<int> ids = new List<int>();
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            String answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&type=post&owner_id=-" + groupId + "&item_id=" + postId);
+            String answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&type=post&owner_id=-"+groupId+"&item_id="+postId);
             JObject obj = JObject.Parse(answer);
             JToken jtoken = obj["response"]["users"].First;
             int counter = 0;
             int counterM = 1;
             do
+            
             {
                 try
                 {
-                    ids.Add(jtoken.ToString());
+                    ids.Add(int.Parse(jtoken.ToString()));
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
                     break;
                 }
@@ -634,9 +634,9 @@ namespace MvcWebRole1.Controllers
 
             return ids;
         }
-        public static List<String> getRepostIdsFromPost(String groupId, int postId)
+        public static List<int> getRepostIdsFromPost(int groupId, int postId)
         {
-            List<String> ids = new List<String>();
+            List<int> ids = new List<int>();
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
             String answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=1000&filter=copies&type=post&owner_id=-" + groupId + "&item_id=" + postId);
@@ -648,7 +648,7 @@ namespace MvcWebRole1.Controllers
             {
                 try
                 {
-                    ids.Add(jtoken.ToString());
+                    ids.Add(int.Parse(jtoken.ToString()));
                 }
                 catch (Exception e)
                 {
@@ -670,9 +670,9 @@ namespace MvcWebRole1.Controllers
 
             return ids;
         }
-        public static List<Tuple<String, int>> getCommentIdsFromPost(String groupId, int postId)
+        /*public static List<int> getCommentIdsFromPost(int groupId, int postId)
         {
-            List<Tuple<String, int>> ids = new List<Tuple<String, int>>();
+            List<int> ids = new List<int>();
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
             String answer = wc.DownloadString("https://api.vk.com/method/wall.getComments?count=100&owner_id=-" + groupId + "&post_id=" + postId);
@@ -684,7 +684,43 @@ namespace MvcWebRole1.Controllers
             {
                 try
                 {
-                    Tuple<String, int> tpl = new Tuple<String, int>(jtoken["from_id"].ToString(), int.Parse(jtoken["cid"].ToString()));
+                    ids.Add(int.Parse(jtoken["from_id"].ToString()));
+                }
+                catch (Exception e)
+                {
+                    break;
+                }
+                counter++;
+                if (counter == 100)
+                {
+                    answer = wc.DownloadString("https://api.vk.com/method/likes.getList?count=100&type=post&owner_id=-" + groupId + "&item_id=" + postId + "&offset=" + counterM * 100);
+                    obj = JObject.Parse(answer);
+                    jtoken = obj["response"].First.Next;
+                    counterM += 1;
+                    counter = 0;
+                }
+                else
+                    jtoken = jtoken.Next;
+
+            } while (jtoken != null);
+
+            return ids;
+        }*/
+        public static List<Tuple<int,int>> getCommentIdsFromPost(int groupId, int postId)
+        {
+            List<Tuple<int,int>> ids = new List<Tuple<int,int>>();
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String answer = wc.DownloadString("https://api.vk.com/method/wall.getComments?count=100&owner_id=-" + groupId + "&post_id=" + postId);
+            JObject obj = JObject.Parse(answer);
+            JToken jtoken = obj["response"].First.Next;
+            int counter = 0;
+            int counterM = 1;
+            do
+            {
+                try
+                {
+                    Tuple<int,int> tpl = new Tuple<int,int>(int.Parse(jtoken["from_id"].ToString()),int.Parse(jtoken["cid"].ToString()));
                     ids.Add(tpl);
                 }
                 catch (Exception e)

@@ -15,15 +15,14 @@ namespace MvcWebRole1.Models
         public String NAME { get; set; }
         public DateTime BIRTHDAY { get; set; }
         public int TYPE { get; set; }
-        public String ID_VK { get; set; }
-        public String ID_FB { get; set; }
-        public int SEX { get; set; }    // 2 - male, 1 - female, 0 - hz
+        public int ID_VK { get; set; }
+        public int ID_FB { get; set; }
         public DateTime DATE_COME { get; set; }
         public DateTime DATE_LEAVE { get; set; }
         public string MOBILE_NUMBER { get; set; }
         public Client()
         { }
-        public Client(int ID_USER, String NAME, DateTime BIRTHDAY, int TYPE, String ID_VK, String ID_FB, DateTime DATE_COME, string MOBILE_NUMBER, DateTime DATE_LEAVE,int SEX)
+        public Client(int ID_USER, String NAME, DateTime BIRTHDAY, int TYPE, int ID_VK, int ID_FB, DateTime DATE_COME, string MOBILE_NUMBER, DateTime DATE_LEAVE)
         {
             this.ID_USER = ID_USER;
             this.NAME = NAME;
@@ -34,7 +33,6 @@ namespace MvcWebRole1.Models
             this.DATE_COME = DATE_COME;
             this.MOBILE_NUMBER = MOBILE_NUMBER;
             this.DATE_LEAVE = DATE_LEAVE;
-            this.SEX = SEX;
         }
     }
 }
