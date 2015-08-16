@@ -31,12 +31,22 @@ namespace MvcWebRole1.Controllers
 
             foreach (SocAccount sa in socAccs)
             {
-                groups.AddRange(db.Groups.Where(q => q.ID_AC == sa.ID_AC).ToList());
-            }
+                groups.AddRange(db.Groups.Where(q => q.ID_AC == sa.ID_AC).ToList());  //выберем все группы для отдельного соцакка
+                foreach (MvcWebRole1.Models.Group group in groups)
+                {
+                    List<string> loadedIds = FBWorker.getGroupSubscribersIds(group.ID_GROUP, sa.TOKEN); //получим айди юзеров для отдельной группы
 
-            foreach (MvcWebRole1.Models.Group group in groups)
-            {
+                    List<Client> allClients = db.Clients.ToList();
+                    List<string> allClientIds = new List<string>();
+                    foreach (Client c in allClients)
+                    {
+                        allClientIds.Add(c.ID_FB);
+                    }
 
+
+
+                }
+                groups.Clear();
             }
 
         }
