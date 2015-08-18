@@ -23,10 +23,10 @@ namespace MvcWebRole1.Models
         public DbSet<ClientComment> ClientComments { get; set; }
 
         public DbSet<MarkProgram> MarkPrograms { get; set; }
-        public DbSet<Trigger> Triggers { get; set; }
         public DbSet<T1Trigger> T1Trigger{ get; set; }
         public DbSet<ClientInMP> ClientInMp { get; set; }
-        public DbSet<Arrow> Arrows { get; set; }
+        public DbSet<Arrows> Arrows { get; set; }
+        public DbSet<T1Arrow> T1Arrow { get; set; }
         public DbSet<Action> Actions { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

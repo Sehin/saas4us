@@ -36,28 +36,43 @@ namespace MvcWebRole1.Models
     {
         [Key]
         public int ID_ACTION { get; set; }
-        public int ID_PR { get; set; }
         public int type { get; set; }
         public Action() { }
-        public Action(int ID_PR, int type)
+        public Action(int type)
         {
-            this.ID_PR = ID_PR;
             this.type = type;
         }
     }
-    public class Arrow
+
+    public class Arrows
     {
         [Key]
-        public int ID_AR { get; set; }
+        public int ID_ARROW { get; set; }
         public int ID_FROM { get; set; }
         public int ID_TO { get; set; }
-        public DateTime time { get; set; }
-        public Arrow() { }
-        public Arrow(int ID_FROM, int ID_TO, DateTime time)
+        public int ID_PR { get; set; }
+        public int TYPE { get; set; }
+        public Arrows() { }
+        public Arrows(int ID_FROM, int ID_TO, int ID_PR)
         {
             this.ID_FROM = ID_FROM;
             this.ID_TO = ID_TO;
-            this.time = time;
+            this.ID_PR = ID_PR;
+        }
+    }
+
+    public class T1Arrow
+    {
+        [Key]
+        public int ID_T1AR { get; set; }
+        public int ID_ARROW { get; set; }
+        public double CHANCE { get; set; }
+        
+        public T1Arrow() { }
+        public T1Arrow(int ID_ARROW, float CHANCE)
+        {
+            this.ID_ARROW = ID_ARROW;
+            this.CHANCE = CHANCE;
         }
     }
 
