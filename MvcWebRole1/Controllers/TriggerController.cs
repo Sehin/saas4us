@@ -21,89 +21,120 @@ namespace MvcWebRole1.Controllers
         {
             DatabaseContext db = new DatabaseContext();
             #region T1
-            List<TriggerT1> T1Triggers = db.TriggersT1.ToList();
-            foreach(TriggerT1 t1 in T1Triggers)
+            List<T1Trigger> T1Triggers = db.T1Trigger.ToList();
+
+
+            foreach (T1Trigger t1 in T1Triggers)
             {
-                Trigger trigger = db.Triggers.Where(t => t.ID_TR == t1.ID_TR).Single();
+                 Trigger trigger = db.Triggers.Where(t=>t.ID_TR==t1.ID_TR).Single();
                 MarkProgram mp = db.MarkPrograms.Where(m => m.ID_PR == trigger.ID_PR).Single();
                 int userId = mp.ID_USER;
+                bool age = false;
+                bool sex = false;
+                bool type = false;
 
-                List<Client> clients = new List<Client>();
+                List<int> idAge = null;
+                List<int> idSex = null;
+                List<int> idType = null;
 
-                if (t1.CL_AGE_SIGN!=-1) // Возраст не указан
+                if (t1.CL_AGE_SIGN != -1) // Возраст указан
                 {
-                    if (t1.CL_SEX != -1)  // Пол не важен
-                    {
-                        if (t1.CL_TYPE != -1)   // Тип не важен
-                        {
-                            clients = db.Clients.ToList();
-                        }
-                        else        // Тип важен
-                        {
-                            clients = db.Clients.Where(c=>c.TYPE==t1.CL_TYPE).ToList();
-                        }
-                    }
-                    else // Пол важен
-                    {
-                        if (t1.CL_TYPE != -1)   // Тип не важен, пол важен
-                        {
-                            clients = db.Clients.Where(c=>c.SEX==t1.CL_SEX).ToList();
-                        }
-                        else        // Тип важен, пол важен
-                        {
-                            clients = db.Clients.Where(c => c.TYPE == t1.CL_TYPE && c.SEX==t1.CL_SEX).ToList();
-                        }
-                    }
-                }
-                else        // Возраст указан
-                {
-                    if (t1.CL_SEX != -1)  // Пол не важен
-                    {
-                        if (t1.CL_TYPE != -1)   // Тип не важен, возраст важен
-                        {
-                            clients = db.Clients.ToList();
-                        }
-                        else        // Тип важен
-                        {
-                            clients = db.Clients.Where(c => c.TYPE == t1.CL_TYPE).ToList();
-                        }
-                    }
-                    else // Пол важен
-                    {
-                        if (t1.CL_TYPE != -1)   // Тип не важен, пол важен
-                        {
-                            clients = db.Clients.Where(c => c.SEX == t1.CL_SEX).ToList();
-                        }
-                        else        // Тип важен, пол важен
-                        {
-                            clients = db.Clients.Where(c => c.TYPE == t1.CL_TYPE && c.SEX == t1.CL_SEX).ToList();
-                        }
-                    }
+                    age = true;
+                    DateTime now = DateTime.Now.AddYears(t1.CL_AGE * -1);
+                    if (t1.CL_AGE_SIGN==0)
+                        idAge = db.Clients.Where(c => c.BIRTHDAY < now && c.BIRTHDAY!=new DateTime(1,1,1) && c.ID_USER==userId).Select(c => c.ID_CL).ToList();
+                    if (t1.CL_AGE_SIGN == 1)
+                        idAge = db.Clients.Where(c => c.BIRTHDAY > now && c.BIRTHDAY.Year != 9999 && c.ID_USER == userId).Select(c => c.ID_CL).ToList();
+                    if (t1.CL_AGE_SIGN == 2)
+                        idAge = db.Clients.Where(c => c.BIRTHDAY.Year == now.Year && c.ID_USER == userId).Select(c => c.ID_CL).ToList();
                 }
 
+                if (t1.CL_SEX!=-1)  // Пол указан
+                {
+                    sex = true;
+                    idSex = db.Clients.Where(c => c.SEX == t1.CL_SEX && c.ID_USER == userId).Select(c => c.ID_CL).ToList();
+                }
+
+                if (t1.CL_TYPE!=1) // Тип указан
+                {
+                    type = true;
+                    idType = db.Clients.Where(c => c.TYPE == t1.CL_TYPE && c.ID_USER == userId).Select(c => c.ID_CL).ToList();
+                }
+
+                List<int> ids = new List<int>();
+
+
+                if (age)
+                {
+                    ids = idAge;
+                    age = false;
+                }
+                else if (sex)
+                {
+                    ids = idSex;
+                    sex = false;
+                }
+                else if (type)
+                {
+                    ids = idType;
+                    type = false;
+                }
+
+                if(age)
+                {
+                    List<int> ageTempIds = new List<int>();
+                    foreach(int id in idAge)
+                    {
+                        if(ids.Contains(id))
+                        {
+                            ageTempIds.Add(id);
+                        }
+                    }
+                    ids = ageTempIds;
+                }
                 
-            }
-#endregion
-        }
-        public String getT1WhereStatement(TriggerT1 t1)
-        {
-            String whereStatement = "";
-            DatabaseContext db = new DatabaseContext();
-           // IQueryable<Client> cli = from m in db.Clients where m.
-            if(t1.CL_AGE_SIGN!=-1)
-            {
-                switch(t1.CL_AGE_SIGN)
+                if (sex)
                 {
-                    case(0):    // Если знак >
+                    List<int> sexTempIds = new List<int>();
 
-                        break;
+                    foreach (int id in idSex)
+                    {
+                        if (ids.Contains(id))
+                        {
+                            sexTempIds.Add(id);
+                        }
+                    }
+                    ids = sexTempIds;
                 }
-                DateTime now = DateTime.Now.AddYears(t1.CL_AGE*-1);
 
-                whereStatement += "m.BIRTHDAY < CONVERT(DATETIME2, '1980-09-02') and q.BIRTHDAY != CONVERT(DATETIME2, '0001-01-01')";
+                if (type)
+                {
+                    List<int> typeTempIds = new List<int>();
+
+                    foreach (int id in idType)
+                    {
+                        if (ids.Contains(id))
+                        {
+                            typeTempIds.Add(id);
+                        }
+                    }
+                    ids = typeTempIds;
+                }
+
+                //ClientInMP cim = new ClientInMP()
+
             }
-
-            return whereStatement;
+            #endregion
         }
+        public int getFirstActionId(MarkProgram mp)
+        {
+            DatabaseContext db = new DatabaseContext();
+            List<int> actionids = db.Actions.Where(a => a.ID_PR == mp.ID_PR).Select(a => a.ID_ACTION).ToList();
+            foreach (int id in actionids)
+            {
+
+            }
+        }
+    
     }
 }

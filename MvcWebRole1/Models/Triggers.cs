@@ -19,7 +19,7 @@ namespace MvcWebRole1.Models
             this.type = type;
         }
     }
-    public class TriggerT1
+    public class T1Trigger
     {
         [Key]
         public int ID_TT1 { get; set; }
