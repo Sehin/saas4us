@@ -52,6 +52,7 @@ namespace MvcWebRole1.Controllers
            try
            {
                // Создаем новый jobCollection
+              
                var result_ = schedulerServiceClient.JobCollections.Create("sch-serv", "backgroundActions", new JobCollectionCreateParameters()
                {
                    Label = "backgroundActions",
@@ -97,7 +98,6 @@ namespace MvcWebRole1.Controllers
                    Interval = 30
                }
            });
-           
            // Update vk actions
 
            var _result1 = schedulerClient.Jobs.Create(new JobCreateParameters()
@@ -140,4 +140,5 @@ namespace MvcWebRole1.Controllers
             return new CertificateCloudCredentials(subscriptionId, certificate);
         }
     }
+  //  public static class 
 }
