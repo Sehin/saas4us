@@ -129,10 +129,14 @@ namespace MvcWebRole1.Controllers
                     // Если тип стрелки - 1 (random)
                     case 1:
                         List<List<int>> splitteredIds = getSplittedIds(ids, firstArrowsIds);
+                        int i = 0;
                         foreach (int arrowId in firstArrowsIds)
                         {
                             int actionId = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
-                            
+                            // получили Action_ID на который ведет стрелка с arrowID, id пользователей   
+
+
+                            i++;
                         }
                         break;
                 }
