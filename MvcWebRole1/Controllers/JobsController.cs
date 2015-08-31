@@ -259,6 +259,7 @@ namespace MvcWebRole1.Controllers
                     if (result.Job.State != JobState.Enabled)
                     {
                         db.Jobs.Remove(job);
+                        _schedulerClient.Jobs.Delete(job.ID);
                     }
                 }
             }
@@ -314,6 +315,9 @@ namespace MvcWebRole1.Controllers
                     },
                     StartTime = DateTime.UtcNow
                 });
+                MvcWebRole1.Models.Job job_ = new Models.Job(_result.Job.Id, jobCollection.ID_JC);
+                db.Jobs.Add(job_);
+                db.SaveChanges();
         }
         public static JobCollection createNewJC()
         {

@@ -118,29 +118,54 @@ namespace MvcWebRole1.Controllers
                     }
                     ids = typeTempIds;
                 }
+                List<int> idsToRemove = new List<int>();
+                foreach (int id in ids)
+                {
+                    if(db.ClientInMps.Where(c => c.ID_CL == id && c.ID_MP == t1.ID_PR).Count()>0)
+                    {
+                        idsToRemove.Add(id);
+                    }
+                }
+                foreach(int id in idsToRemove)
+                {
+                    ids.Remove(id);
+                }
+                // Оставить ids которых еще не было в данной MP
+                
             #endregion
 
                 List<int> firstArrowsIds = getFirstArrowsIds(t1.ID_PR);
-
-                int arrowsType = db.Arrows.Where(a => a.ID_ARROW == firstArrowsIds[0]).Select(a => a.TYPE).Single();
+                int firstArrowId = firstArrowsIds[0];
+                int arrowsType = db.Arrows.Where(a => a.ID_ARROW == firstArrowId).Select(a => a.TYPE).Single();
 
                 switch (arrowsType)
                 {
                     // Если тип стрелки - 1 (random)
                     case 1:
                         List<List<int>> splitteredIds = getSplittedIds(ids, firstArrowsIds);
-                        int i = 1;
+                        int i = 0;
+                        List<int> actionIds = new List<int>();
                         foreach (int arrowId in firstArrowsIds)
                         {
                             int actionId = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
+                            actionIds.Add(actionId);
                             foreach (int ID_CL in splitteredIds[i])
                             {
                                 int ID_ACTION = db.Arrows.Where(a=>a.ID_ARROW==arrowId).Select(a=>a.ID_TO).Single();
                                 ClientInMP cimp = new ClientInMP(t1.ID_PR, ID_CL, ID_ACTION);   // Привязываем клиентов к MP и к конкретному Action
+                                if(db.ClientInMps.Where(c => c.ID_CL == cimp.ID_CL && c.ID_MP == cimp.ID_MP).Count()==0)    // Если клиента нет в этой MP
+                                    db.ClientInMps.Add(cimp);
                             }
                             i++;
                             // Т.к. в данном типе стрелок нет временного параметра - то можно создать один Job для всех последующих Action
                         }
+                        if (ids.Count > 0)
+                        {
+                            db.SaveChanges();
+                            JobWorker.createNewJob(actionIds);
+                        }
+                        JobWorker.createNewJob(actionIds);
+
                         break;
                 }
             }   
@@ -148,7 +173,7 @@ namespace MvcWebRole1.Controllers
         }
         public void testIt()
         {
-            List<int> ids = new List<int>();
+           /* List<int> ids = new List<int>();
             for (int i = 0; i < 16; i++)
             {
                 Random q = new Random(i * DateTime.Now.Second);
@@ -157,7 +182,8 @@ namespace MvcWebRole1.Controllers
             DatabaseContext db = new DatabaseContext();
             T1Trigger t1 = db.T1Trigger.Where(t => t.ID_TT1 == 2).Single();
             List<int> firstArrowsIds = getFirstArrowsIds(t1.ID_PR);
-            List<List<int>> qwerty = getSplittedIds(ids, firstArrowsIds);
+            List<List<int>> qwerty = getSplittedIds(ids, firstArrowsIds);*/
+
         }
         public List<int> getFirstArrowsIds(int ID_PR)
         {

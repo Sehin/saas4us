@@ -47,10 +47,26 @@ namespace MvcWebRole1.Models
         [Key]
         public int ID_ACTION { get; set; }
         public int type { get; set; }
+        public int ID_PR { get; set; }
         public Action() { }
-        public Action(int type)
+        public Action(int type, int ID_PR)
         {
             this.type = type;
+            this.ID_PR = ID_PR;
+        }
+    }
+
+    public class T2Action
+    {
+        [Key]
+        public int ID_T2A { get; set; }
+        public int ID_CO { get; set; }
+        public int ID_ACTION { get; set; }
+        public T2Action() { }
+        public T2Action(int ID_CO, int ID_ACTION)
+        {
+            this.ID_CO = ID_CO;
+            this.ID_ACTION = ID_ACTION;
         }
     }
 

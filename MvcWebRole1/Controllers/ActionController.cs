@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
 
@@ -19,10 +21,10 @@ namespace MvcWebRole1.Controllers
 
         public void testId(int ID_ACTION)
         {
-            execute(ID_ACTION);
+            //execute(ID_ACTION);
         }
 
-        public void execute(int ID_ACTION)
+        public void executeById(int ID_ACTION)
         {
             DatabaseContext db = new DatabaseContext();
             // В первую очередь необходимо определить тип данного Action
@@ -35,7 +37,14 @@ namespace MvcWebRole1.Controllers
                     break;
             }
         }
-
+        public void execute(String id)
+        {
+            List<String> ids = id.Split(',').ToList();
+            foreach (String id_ in ids)
+            {
+                executeById(int.Parse(id_));
+            }
+        }
         public void executeT0(int ID_ACTION)
         {
             // T0 - empty
@@ -50,14 +59,67 @@ namespace MvcWebRole1.Controllers
             {
                 ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
             }
+        }       
+        public void executeT1(int ID_ACTION)
+        {
+
         }
+        public void executeT2(int ID_ACTION)    // mail
+        {
+            DatabaseContext db = new DatabaseContext();
+            int ID_PR = db.Actions.Where(a => a.ID_ACTION == ID_ACTION).Select(a => a.ID_PR).Single();
+            int ID_USER = db.MarkPrograms.Where(mp => mp.ID_PR == ID_PR).Select(mp => mp.ID_USER).Single();
+            User user = db.Users.Where(u => u.Id == ID_USER).Single();
+            String email = user.Email_sender;
+            String pass = user.Email_sender_pass;
+
+            String mailProvider = (email.Split('@').ToArray())[1];
+
+            #region Определение smtp сервера
+            Tuple<String, int> smtp = new Tuple<string,int>("",0);
+            String login = email;
+            if (mailProvider.Equals("gmail.com"))
+            { smtp = new Tuple<string, int>("smtp.gmail.com", 25);}
+            else if (mailProvider.Equals("rambler.ru"))
+            { smtp = new Tuple<string, int>("mail.rambler.ru", 25);}
+            else if (mailProvider.Equals("yandex.ru"))
+            { smtp = new Tuple<string, int>("mail.yandex.ru", 25); login = (email.Split('@').ToArray())[0]; }
+            else if (mailProvider.Equals("mail.ru"))
+            { smtp = new Tuple<string, int>("smtp.mail.ru", 25); }
+            #endregion
+            SmtpClient Smtp = new SmtpClient(smtp.Item1, smtp.Item2);
+            Smtp.Credentials = new NetworkCredential(login, pass);
+            Smtp.EnableSsl = false;
+
+            //Формирование письма
+            T2Action t2action = db.T2Actions.Where(a => a.ID_ACTION == ID_ACTION).Single();
+            Content content = db.Contents.Where(c => c.ID_CO == t2action.ID_CO).Single();
+            MailMessage message = new MailMessage();
+            message.From = new MailAddress(email);
+            message.Subject = content.CONTENT_TITLE;
+            message.Body = content.CONTENT_TEXT;
+            String adresses = "";
+            List<int> clientIds = new List<int>();
+            foreach (ClientInMP cimp in db.ClientInMps.Where(c=>c.ID_ACTION==ID_ACTION))
+            {
+                clientIds.Add(cimp.ID_CL);
+            }
+            foreach(int id in clientIds)
+            {
+                db.Clients.Where(c=>c.ID_CL==id).Select(c=>c.mail)
+            }
+            message.To.Add(new MailAddress("адрес получателя"));
+
+            Smtp.Send(message);//отправка
+        }
+        
     }
 
     public static class ActionWorker
     {
         public static void doNextArrowStep(int ID_ARROW)
         {
-            DatabaseContext db = new DatabaseContext();
+        /*    DatabaseContext db = new DatabaseContext();
             int arrowType = db.Arrows.Where(a => a.ID_ARROW == ID_ARROW).Select(a => a.TYPE).Single();
             switch (arrowType)
             {
@@ -77,19 +139,20 @@ namespace MvcWebRole1.Controllers
                         // Т.к. в данном типе стрелок нет временного параметра - то можно создать один Job для всех последующих Action
                     }
                     break;
-            }
+            }*/
         }
         public static void doSplitterArrowStep(int ID_ARROW)
         {
             DatabaseContext db = new DatabaseContext();
             Arrows arrow = db.Arrows.Where(a=>a.ID_ARROW==ID_ARROW).Single();
 
-            List<int> arrowsIds = db.Arrows.Where(a => a.ID_ARROW == arrow.ID_ARROW).Select(a => a.ID_ARROW).ToList();
+            List<int> arrowsIds = db.Arrows.Where(a => a.ID_FROM == arrow.ID_FROM).Select(a => a.ID_ARROW).ToList();
 
-            List<int> ids = db.ClientInMp.Where(a => a.ID_ACTION == arrow.ID_FROM).Select(a => a.ID_CL).ToList();
+            List<int> ids = db.ClientInMps.Where(a => a.ID_ACTION == arrow.ID_FROM).Select(a => a.ID_CL).ToList();
 
             List<List<int>> splitteredIds = getSplittedIds(ids, arrowsIds);
-            int i = 1;
+            int i = 0;
+            List<int> actionIds = new List<int>();
             foreach (int arrowId in arrowsIds)
             {
                 int actionId = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
@@ -97,13 +160,17 @@ namespace MvcWebRole1.Controllers
                 {
                     int ID_ACTION_FROM = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_FROM).Single();
                     int ID_ACTION_TO = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
-
-                    ClientInMP cimp = db.ClientInMp.Where(c => c.ID_CL == ID_CL && c.ID_ACTION == ID_ACTION_FROM).Single();
+                    ClientInMP cimp = db.ClientInMps.Where(c => c.ID_CL == ID_CL && c.ID_ACTION == ID_ACTION_FROM).Single();
                     cimp.ID_ACTION = ID_ACTION_TO; // Меняем ID_ACTION на следующий
                 }
                 i++;
-                // Т.к. в данном типе стрелок нет временного параметра - то можно создать один Job для всех последующих Action
+                actionIds.Add(actionId);
+
             }
+            db.SaveChanges();
+            // Т.к. в данном типе стрелок нет временного параметра - то можно создать один Job для всех последующих Action
+            JobWorker.createNewJob(actionIds);
+
         }
         public static List<List<int>> getSplittedIds(List<int> ids, List<int> arrowIds)
         {
