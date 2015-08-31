@@ -28,6 +28,9 @@ namespace MvcWebRole1.Models
         public DbSet<Arrows> Arrows { get; set; }
         public DbSet<T1Arrow> T1Arrow { get; set; }
         public DbSet<Action> Actions { get; set; }
+
+        public DbSet<Job> Jobs { get; set; }
+        public DbSet<JobCollection> JobCollections { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
