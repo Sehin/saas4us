@@ -89,7 +89,7 @@ namespace MvcWebRole1.Controllers
             #endregion
             SmtpClient Smtp = new SmtpClient(smtp.Item1, smtp.Item2);
             Smtp.Credentials = new NetworkCredential(login, pass);
-            Smtp.EnableSsl = false;
+            Smtp.EnableSsl = true;
 
             //Формирование письма
             T2Action t2action = db.T2Actions.Where(a => a.ID_ACTION == ID_ACTION).Single();
@@ -106,11 +106,23 @@ namespace MvcWebRole1.Controllers
             }
             foreach(int id in clientIds)
             {
-                db.Clients.Where(c=>c.ID_CL==id).Select(c=>c.mail)
+                String mail = db.Clients.Where(c => c.ID_CL == id).Select(c => c.MAIL).Single();
+                adresses += mail + ",";
             }
-            message.To.Add(new MailAddress("адрес получателя"));
-
+            adresses = adresses.Remove(adresses.Count()-1);
+            message.To.Add(adresses);
             Smtp.Send(message);//отправка
+
+
+            List<Arrows> arrows = db.Arrows.Where(a => a.ID_FROM == ID_ACTION).ToList();
+            if (arrows.Count > 1)
+            {
+                ActionWorker.doSplitterArrowStep(arrows[0].ID_ARROW);
+            }
+            else
+            {
+                ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
+            }
         }
         
     }
