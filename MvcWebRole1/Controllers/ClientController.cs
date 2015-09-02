@@ -719,4 +719,45 @@ namespace MvcWebRole1.Controllers
         }
 
     }
+
+    public static class ClientWorker
+    {
+        public static Client addNewClient(String ID_VK, String ID_FB, String MAIL, String MOBILE_NUMBER,int USER_ID)
+        {
+            //todo sa от которого делаются запросы к соцкам выбираются как-то мутно. А если их много?
+            DatabaseContext db = new DatabaseContext();
+            Client client = new Client();
+            bool isNewClient = true;
+            if (ID_VK!=null)
+            {
+                SocAccount sa = db.SocAccounts.Where(s => s.ID_USER == USER_ID && s.SOCNET_TYPE == 0).Single();
+                if (db.Clients.Where(c => c.ID_VK == ID_VK).Count() < 0)
+                    client = VKWorker.getClientById(ID_VK, sa);
+                else
+                { 
+                    client = db.Clients.Where(c => c.ID_VK == ID_VK).Single();
+                    isNewClient = false;
+                }
+            }
+            if (ID_FB != null)
+            {
+                SocAccount sa = db.SocAccounts.Where(s => s.ID_USER == USER_ID && s.SOCNET_TYPE == 1).Single();
+                /*if (db.Clients.Where(c => c.ID_FB == ID_FB).Count() < 0)
+                    client = FBWorker.getClientById(ID_VK, sa);
+                else
+                 {
+                    client = db.Clients.Where(c => c.ID_VK == ID_VK).Single();
+                    isNewClient = false;                    
+                 }
+                 */
+            }
+            client.MAIL = MAIL;
+            client.MOBILE_NUMBER = MOBILE_NUMBER;
+            if(isNewClient)
+            {
+                db.Clients.Add(client);
+            }
+            db.SaveChanges();
+        }
+    }
 }

@@ -138,7 +138,17 @@ namespace MvcWebRole1.Controllers
                 int firstArrowId = firstArrowsIds[0];
                 int arrowsType = db.Arrows.Where(a => a.ID_ARROW == firstArrowId).Select(a => a.TYPE).Single();
 
-                switch (arrowsType)
+                if (firstArrowsIds.Count > 1)
+                {
+                    ActionWorker.doSplitterArrowStep(firstArrowId, ids);
+                }
+                else
+                {
+                    ActionWorker.doNextArrowStep(firstArrowId,ids);
+                }
+
+
+                /*switch (arrowsType)
                 {
                     // Если тип стрелки - 1 (random)
                     case 1:
@@ -167,9 +177,31 @@ namespace MvcWebRole1.Controllers
                         JobWorker.createNewJob(actionIds);
 
                         break;
-                }
+                }*/
             }   
             #endregion
+        }
+        public void checkT3Triggers(String token, String ID_VK = "", String ID_FB="", String MAIL="", String MOBILE_NUMBER="")
+        {
+            DatabaseContext db = new DatabaseContext();
+            T3Trigger tr;
+            if(db.T3Trigger.Where(t=>t.TOKEN==token).Count()>0)
+            {
+                tr=db.T3Trigger.Where(t=>t.TOKEN==token).Single();
+            }
+            else
+            {
+                return;
+            }
+
+
+
+            int count = db.Clients.Where(c => c.ID_VK == ID_VK || c.ID_FB == ID_FB || c.MOBILE_NUMBER == MOBILE_NUMBER || c.MAIL == MAIL).Count();
+            if (count < 0)
+            {
+                int ID_USER = db.MarkPrograms.Where(m=>m.ID_PR==tr.ID_PR).Select(m=>m.ID_USER).Single();
+                Client client = ClientWorker.addNewClient(ID_VK,ID_FB,MAIL,MOBILE_NUMBER)
+            }
         }
         public void testIt()
         {
@@ -183,7 +215,7 @@ namespace MvcWebRole1.Controllers
             T1Trigger t1 = db.T1Trigger.Where(t => t.ID_TT1 == 2).Single();
             List<int> firstArrowsIds = getFirstArrowsIds(t1.ID_PR);
             List<List<int>> qwerty = getSplittedIds(ids, firstArrowsIds);*/
-
+            TriggerWorker.getNewT3Token();
         }
         public List<int> getFirstArrowsIds(int ID_PR)
         {
@@ -233,5 +265,37 @@ namespace MvcWebRole1.Controllers
             }
             return splittedList;
         }
+    
     }
+public static class TriggerWorker
+{
+    public static String getNewT3Token()
+    {
+        DatabaseContext db = new DatabaseContext();
+        String token = "";
+
+        for(int i=0;i<50;i++)
+        {
+            Random r = new Random((int)DateTime.Now.Ticks);
+            int c = r.Next(48,91);
+            if (token.Length > 0)
+            {
+                if (token[token.Length - 1] == Convert.ToChar(c))
+                {
+                    i--; continue;
+                }
+                else
+                    token += Convert.ToChar(c);
+            }
+            else
+                token += Convert.ToChar(c);
+
+        }
+        
+        if (db.T3Trigger.Where(t => t.TOKEN == token).Count() > 0)
+            return getNewT3Token();
+        else
+            return token;
+    }
+}
 }

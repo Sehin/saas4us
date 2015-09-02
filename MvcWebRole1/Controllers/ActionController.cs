@@ -129,39 +129,69 @@ namespace MvcWebRole1.Controllers
 
     public static class ActionWorker
     {
-        public static void doNextArrowStep(int ID_ARROW)
+        public static void doNextArrowStep(int ID_ARROW, List<int> ids = null)
         {
-        /*    DatabaseContext db = new DatabaseContext();
+            DatabaseContext db = new DatabaseContext();
             int arrowType = db.Arrows.Where(a => a.ID_ARROW == ID_ARROW).Select(a => a.TYPE).Single();
+            int ID_ACTION_FROM = db.Arrows.Where(a => a.ID_ARROW == ID_ARROW).Select(a => a.ID_FROM).Single();
+            int ID_ACTION_TO = db.Arrows.Where(a => a.ID_ARROW == ID_ARROW).Select(a => a.ID_TO).Single();
+            int ID_MP = db.Arrows.Where(a=> a.ID_ARROW == ID_ARROW).Select(a=>a.ID_PR).Single();
+            if (ids == null)
+            {
+                ids = db.ClientInMps.Where(c => c.ID_ACTION == ID_ACTION_FROM).Select(c => c.ID_CL).ToList();
+            }
+
             switch (arrowType)
             {
-                // Если тип стрелки - 1 (random)
-                case 1:
-                    List<List<int>> splitteredIds = getSplittedIds(ids, firstArrowsIds);
-                    int i = 1;
-                    foreach (int arrowId in firstArrowsIds)
+                // Если тип стрелки - 0 (empty)
+                case 0:
+                    foreach (int id in ids)
                     {
-                        int actionId = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
-                        foreach (int ID_CL in splitteredIds[i])
+                        if (db.ClientInMps.Where(c => c.ID_CL == id && c.ID_ACTION == ID_ACTION_FROM).Count() == 0)
                         {
-                            int ID_ACTION = db.Arrows.Where(a => a.ID_ARROW == arrowId).Select(a => a.ID_TO).Single();
-                            ClientInMP cimp = new ClientInMP(t1.ID_PR, ID_CL, ID_ACTION);   // Привязываем клиентов к MP и к конкретному Action
+                            ClientInMP cimp = new ClientInMP(ID_MP, id, ID_ACTION_TO);
+                            db.ClientInMps.Add(cimp);
                         }
-                        i++;
-                        // Т.к. в данном типе стрелок нет временного параметра - то можно создать один Job для всех последующих Action
+                        else
+                        {
+                            ClientInMP cimp = db.ClientInMps.Where(c => c.ID_CL == id && c.ID_ACTION == ID_ACTION_FROM).Single();
+                            cimp.ID_ACTION = ID_ACTION_TO;
+                        }
                     }
+                    db.SaveChanges();
+                    JobWorker.createNewJob(ID_ACTION_TO,0);
                     break;
-            }*/
+                case 2:
+                    foreach (int id in ids)
+                    {
+                        if (db.ClientInMps.Where(c => c.ID_CL == id && c.ID_ACTION == ID_ACTION_FROM).Count() == 0)
+                        {
+                            ClientInMP cimp = new ClientInMP(ID_MP, id, ID_ACTION_TO);
+                            db.ClientInMps.Add(cimp);
+                        }
+                        else
+                        {
+                            ClientInMP cimp = db.ClientInMps.Where(c => c.ID_CL == id && c.ID_ACTION == ID_ACTION_FROM).Single();
+                            cimp.ID_ACTION = ID_ACTION_TO;
+                        }
+                    }
+                    db.SaveChanges();
+                    int hours = db.T2Arrow.Where(a=>a.ID_ARROW==ID_ARROW).Select(a=>a.HOURS).Single();
+                    JobWorker.createNewJob(ID_ACTION_TO,hours);
+                    break;
+                 
+            }
         }
-        public static void doSplitterArrowStep(int ID_ARROW)
+        public static void doSplitterArrowStep(int ID_ARROW, List<int> ids = null)
         {
             DatabaseContext db = new DatabaseContext();
             Arrows arrow = db.Arrows.Where(a=>a.ID_ARROW==ID_ARROW).Single();
 
             List<int> arrowsIds = db.Arrows.Where(a => a.ID_FROM == arrow.ID_FROM).Select(a => a.ID_ARROW).ToList();
-
-            List<int> ids = db.ClientInMps.Where(a => a.ID_ACTION == arrow.ID_FROM).Select(a => a.ID_CL).ToList();
-
+            if (ids == null)
+            {
+                ids = db.ClientInMps.Where(a => a.ID_ACTION == arrow.ID_FROM).Select(a => a.ID_CL).ToList();
+            }
             List<List<int>> splitteredIds = getSplittedIds(ids, arrowsIds);
             int i = 0;
             List<int> actionIds = new List<int>();

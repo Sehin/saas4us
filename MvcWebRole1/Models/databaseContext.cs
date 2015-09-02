@@ -24,9 +24,11 @@ namespace MvcWebRole1.Models
 
         public DbSet<MarkProgram> MarkPrograms { get; set; }
         public DbSet<T1Trigger> T1Trigger{ get; set; }
+        public DbSet<T3Trigger> T3Trigger { get; set; }
         public DbSet<ClientInMP> ClientInMps { get; set; }
         public DbSet<Arrows> Arrows { get; set; }
         public DbSet<T1Arrow> T1Arrow { get; set; }
+        public DbSet<T2Arrow> T2Arrow { get; set; }
         public DbSet<Action> Actions { get; set; }
         public DbSet<T2Action> T2Actions { get; set; }
 

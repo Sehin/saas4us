@@ -29,6 +29,19 @@ namespace MvcWebRole1.Models
         public int CL_SEX { get; set; }
         public int CL_AGE_SIGN { get; set; }
     }
+    public class T3Trigger
+    {
+        [Key]
+        public int ID_TT3 { get; set; }
+        public int ID_PR { get; set; }
+        public String TOKEN { get; set; }
+        public T3Trigger() { }
+        public T3Trigger(int ID_PR, String TOKEN)
+        {
+            this.ID_PR = ID_PR;
+            this.TOKEN = TOKEN;
+        }
+    }
     public class Mission
     {
         [Key]
@@ -102,6 +115,21 @@ namespace MvcWebRole1.Models
             this.ID_ARROW = ID_ARROW;
             this.CHANCE = CHANCE;
         }
+    }
+    public class T2Arrow
+    {
+        [Key]
+        public int ID_T2AR { get; set; }
+        public int ID_ARROW { get; set; }
+        public int HOURS { get; set; }
+        public T2Arrow() { }
+        public T2Arrow(int ID_ARROW, int HOURS)
+        {
+            this.ID_ARROW = ID_ARROW;
+            this.HOURS = HOURS;
+        }
+
+
     }
 
 }
