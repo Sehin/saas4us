@@ -32,6 +32,10 @@ namespace MvcWebRole1.Models
 
         public DbSet<Job> Jobs { get; set; }
         public DbSet<JobCollection> JobCollections { get; set; }
+
+
+
+        public DbSet<Subscriber> Subscribers { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();

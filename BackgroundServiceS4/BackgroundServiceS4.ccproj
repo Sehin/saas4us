@@ -48,9 +48,13 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="MvcWebRole1Content\" />
+    <Folder Include="Profiles" />
   </ItemGroup>
   <ItemGroup>
     <DiagnosticsConfiguration Include="MvcWebRole1Content\diagnostics.wadcfgx" />
+  </ItemGroup>
+  <ItemGroup>
+    <PublishProfile Include="Profiles\Saas4Production.azurePubxml" />
   </ItemGroup>
   <!-- Import the target files for this project template -->
   <PropertyGroup>

@@ -1,0 +1,12 @@
+﻿@{
+    Layout = "~/Views/Home/Layout.cshtml";
+}
+
+
+           @using (Html.BeginForm("addSubscribe", "Home"))
+                {
+                    <input type="text" placeholder="Enter your email" class="form-control" name="email" />
+        <br />
+    <center><input type="submit" class="btn btn-default btn-lg" value="Подписаться на новости" /></center>
+                }
+
