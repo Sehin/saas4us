@@ -62,6 +62,29 @@ namespace MvcWebRole1.Controllers
         }       
         public void executeT1(int ID_ACTION)
         {
+            DatabaseContext db = new DatabaseContext();
+            int ID_PR = db.Actions.Where(a => a.ID_ACTION == ID_ACTION).Select(a => a.ID_PR).Single();
+            int ID_USER = db.MarkPrograms.Where(mp => mp.ID_PR == ID_PR).Select(mp => mp.ID_USER).Single();
+            int Type = db.T1Actions.Where(a => a.ID_ACTION == ID_ACTION).Select(a => a.TYPE).Single();
+
+            List<int> ids = db.ClientInMps.Where(c => c.ID_ACTION == ID_ACTION).Select(c => c.ID_CL).ToList();
+
+            foreach (int id in ids)
+            {
+                Client client = db.Clients.Where(c => c.ID_CL == id).Single();
+                client.TYPE = Type;
+            }
+            db.SaveChanges();
+
+            List<Arrows> arrows = db.Arrows.Where(a => a.ID_FROM == ID_ACTION).ToList();
+            if (arrows.Count > 1)
+            {
+                ActionWorker.doSplitterArrowStep(arrows[0].ID_ARROW);
+            }
+            else
+            {
+                ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
+            }
 
         }
         public void executeT2(int ID_ACTION)    // mail

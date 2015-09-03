@@ -70,6 +70,20 @@ namespace MvcWebRole1.Models
         }
     }
 
+   public class T1Action
+   {
+        [Key]
+        public int ID_T1A { get; set; }
+        public int TYPE { get; set; }
+        public int ID_ACTION { get; set; }
+        public T1Action() { }
+        public T1Action(int TYPE, int ID_ACTION)
+        {
+            this.TYPE = TYPE;
+            this.ID_ACTION = ID_ACTION;
+        }
+   }
+
     [Table("T2Actions")]
     public class T2Action
     {

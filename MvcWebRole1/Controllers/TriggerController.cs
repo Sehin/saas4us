@@ -1,4 +1,5 @@
 ﻿using MvcWebRole1.Models;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -181,9 +182,12 @@ namespace MvcWebRole1.Controllers
             }   
             #endregion
         }
-        public void checkT3Triggers(String token, String ID_VK = "", String ID_FB="", String MAIL="", String MOBILE_NUMBER="")
+        [HttpPost]
+        public void checkT3Triggers(String token, String ID_VK, String ID_FB, String MAIL="", String MOBILE_NUMBER="")
         {
             DatabaseContext db = new DatabaseContext();
+
+            // Определение триггера по токену
             T3Trigger tr;
             if(db.T3Trigger.Where(t=>t.TOKEN==token).Count()>0)
             {
@@ -193,14 +197,38 @@ namespace MvcWebRole1.Controllers
             {
                 return;
             }
-
-
-
-            int count = db.Clients.Where(c => c.ID_VK == ID_VK || c.ID_FB == ID_FB || c.MOBILE_NUMBER == MOBILE_NUMBER || c.MAIL == MAIL).Count();
-            if (count < 0)
+            // Проверка нет ли уже клиента с параметрами, которые были переданы
+            int count = db.Clients.Where(c => c.ID_VK == ID_VK || c.ID_FB == ID_FB).Count();
+            Client client = new Client();
+            if (count == 0)  // Если нет
             {
-                int ID_USER = db.MarkPrograms.Where(m=>m.ID_PR==tr.ID_PR).Select(m=>m.ID_USER).Single();
-                Client client = ClientWorker.addNewClient(ID_VK,ID_FB,MAIL,MOBILE_NUMBER)
+                int ID_USER = db.MarkPrograms.Where(m => m.ID_PR == tr.ID_PR).Select(m => m.ID_USER).Single();
+                client = ClientWorker.addNewClient(ID_VK, ID_FB, MAIL, MOBILE_NUMBER,ID_USER);
+                db.Clients.Add(client);
+                db.SaveChanges();
+            }
+            else
+            {
+                client = ClientWorker.findClientByParams(ID_VK: ID_VK, ID_FB: ID_FB);
+                if (MAIL != null)
+                    client.MAIL = MAIL;
+                if (MOBILE_NUMBER != null)
+                    client.MOBILE_NUMBER = MOBILE_NUMBER;
+            }
+
+
+            List<int> firstArrowsIds = getFirstArrowsIds(tr.ID_PR);
+            int firstArrowId = firstArrowsIds[0];
+            int arrowsType = db.Arrows.Where(a => a.ID_ARROW == firstArrowId).Select(a => a.TYPE).Single();
+            List<int> ids = new List<int>();
+            ids.Add(client.ID_CL);
+            if (firstArrowsIds.Count > 1)
+            {
+                ActionWorker.doSplitterArrowStep(firstArrowId, ids);
+            }
+            else
+            {
+                ActionWorker.doNextArrowStep(firstArrowId, ids);
             }
         }
         public void testIt()
