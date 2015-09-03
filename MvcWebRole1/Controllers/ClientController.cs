@@ -36,19 +36,66 @@ namespace MvcWebRole1.Controllers
                 {
                     List<string> loadedIds = FBWorker.getGroupSubscribersIds(group.ID_GROUP, sa.TOKEN); //получим айди юзеров для отдельной группы
 
+                    #region Отбираем новых пользователей
                     List<Client> allClients = db.Clients.ToList();
                     List<string> allClientIds = new List<string>();
                     foreach (Client c in allClients)
                     {
-                        allClientIds.Add(c.ID_FB);
+                        allClientIds.Add(c.ID_FB);   //получим всех пользователей из базы
                     }
 
+                    List<String> newIds = new List<String>();
+                    for (int i = 0; i < loadedIds.Count; i++)
+                    {
+                        for (int q = 0; q < allClientIds.Count; q++)
+                        {
+                            if (loadedIds[i] != allClientIds[q])   //выберем новых пользователей
+                                newIds.Add(loadedIds[i]);
+                            break;
+                        }
+                    }
+
+                    //отсеим клиентов которые вышли и запишем дату выхода
+                    List<int> leaveClientIds = new List<int>();
+
+                    for (int i = 0; i < allClientIds.Count; i++)
+                    {
+                        bool isLeave = true;
+                        for (int q = 0; q < loadedIds.Count; q++)
+                        {
+                            if (allClientIds[i] == loadedIds[q])
+                                isLeave = false;
+                        }
+                        if (isLeave)
+                        {
+                            String clId = allClientIds[i];
 
 
+                            if (!(clId.Equals("-1")))
+                            {
+                                Client client = db.Clients.Where(c => c.ID_FB == clId).Single();
+                                DateTime tl = new DateTime(0001, 01, 01);
+                                if (client.DATE_LEAVE.Equals(tl))
+                                {
+                                    client.DATE_LEAVE = DateTime.Now;
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+
+                    #region загрузим данные ползователей с новыми айдишниками
+                    for(int i = 0; i < newIds.Count; i++)
+                    {
+
+                        Client new_client = FBWorker.getClientById_FB(newIds[i], sa);
+                        db.Clients.Add(new_client);
+                    }
+                    #endregion
                 }
                 groups.Clear();
             }
-
+            db.SaveChanges();
         }
 
         // Метод, который обновляет клиентов из соц сети VK
@@ -73,7 +120,7 @@ namespace MvcWebRole1.Controllers
                 List<String> clientIds = new List<String>();
                 foreach (Client client in clients)
                 {
-                    clientIds.Add(client.ID_VK);
+                    clientIds.Add(client.ID_VK); 
                 }
 
                 List<String> idsToRemove = new List<String>();
@@ -81,7 +128,7 @@ namespace MvcWebRole1.Controllers
                 {
                     for (int q = 0; q < clientIds.Count; q++)
                     {
-                        if (ids[i] == clientIds[q])
+                        if (ids[i] == clientIds[q])  
                             idsToRemove.Add(ids[i]);
                     }
                 }
@@ -293,7 +340,8 @@ namespace MvcWebRole1.Controllers
             //VKWorker.getPostIdsFromGroup(30022666);
             //       VKWorker.getLikeIdsFromPost(30022666, 115376);
             //VKWorker.getCommentIdsFromPost(87953130, 53);
-            //FBWorker.getGroupSubscribersIds("439902082843443", "CAACEdEose0cBAHdDUIhsjYRZBFznSZCFSjEEa5fXN0g8xkXZAJNWeo0rZAPipDODlSuQN3vZCOnMjcuXCrsBFSL4VCx5uO53oSy9M4NRtceI2Wn7WN1yoTGyHQ2hV33EGzRUgrh5Fv5fAT0rMcIc1ZCqdATAr1lrnamS4zKPmNhS31EVaHlf50gj89Lho6APEvkvhXwPTCVgcrg92DQA2b");
+            updateSocClients_FB();
+           
         }
         private List<List<String>> splitList(List<String> list, int size)
         {
@@ -429,6 +477,65 @@ namespace MvcWebRole1.Controllers
 
             return IDs;
         }
+
+        public static Client getClientById_FB (String id, SocAccount sa)
+        {
+            Client loaded_client = new Client();
+            WebClient wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
+            String result = wc.DownloadString("https://graph.facebook.com/v2.4/" + id +"?access_token="+sa.TOKEN+"&fields=id,name,birthday,gender");
+            
+            JObject obj = JObject.Parse(result);
+            JToken jtoken = obj["base"].First;
+
+
+                String name = jtoken["name"].ToString();
+
+                #region Парсим дату рождения
+                DateTime birthday = new DateTime(0001, 01, 01);
+                try
+                {
+                    String bday = jtoken["bdate"].ToString();
+
+                    String regex = @"(\d*)\.(\d*)\.(\d*)";
+                    Match m = Regex.Match(bday, regex);
+                    if (m.Success)
+                    {
+                        birthday = new DateTime(Int16.Parse(m.Groups[3].ToString()), Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
+                    }
+                    else
+                    {
+                        regex = @"(\d*)\.(\d*)";
+                        m = Regex.Match(bday, regex);
+                        if (m.Success)
+                        {
+                            birthday = new DateTime(9999, Int16.Parse(m.Groups[2].ToString()), Int16.Parse(m.Groups[1].ToString()));
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    birthday = new DateTime(0001, 01, 01);
+                }
+                #endregion
+                String fbId = jtoken["id"].ToString();
+                DateTime time_come = DateTime.Now;
+                DateTime time_leave = new DateTime(0001, 01, 01);
+                int sex;
+                int temp_sex = (int)jtoken["gender"];
+                if (temp_sex.Equals("male"))
+                    sex = 2;
+                else sex = 1;
+                loaded_client = new Client(sa.ID_USER, name, birthday, 0, "-1", fbId, time_come, "", time_leave, sex);
+
+
+            return loaded_client;
+        }
+
+
+        }
+
     }
 
     public static class VKWorker
@@ -719,4 +826,3 @@ namespace MvcWebRole1.Controllers
         }
 
     }
-}
