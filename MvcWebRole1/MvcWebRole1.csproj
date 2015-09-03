@@ -214,6 +214,7 @@
     <Compile Include="Controllers\ClientController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\JobsController.cs" />
+    <Compile Include="Controllers\MPTestController.cs" />
     <Compile Include="Controllers\SaasLogger.cs" />
     <Compile Include="Controllers\StorageController.cs" />
     <Compile Include="Controllers\TriggerController.cs" />
@@ -324,6 +325,9 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\addSubscribe.cshtml" />
     <Content Include="Views\Home\Layout.cshtml" />
+    <Content Include="Views\MPTest\Index.cshtml" />
+    <Content Include="Views\MPTest\Layout_.cshtml" />
+    <Content Include="Views\MPTest\addMP.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
