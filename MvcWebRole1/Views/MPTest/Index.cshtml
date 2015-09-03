@@ -1,0 +1,11 @@
+﻿@{
+    Layout = "~/Views/MPTest/Layout_.cshtml";
+}
+
+<h1>Создайте маркетинговую программу</h1>
+
+@using(Html.BeginForm("addMP","MPTest"))
+{
+    <input type="text" name="MPName" placeholder="Marketing programm name" />
+    <input type="submit" value="Продолжить" />
+}

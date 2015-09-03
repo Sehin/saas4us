@@ -281,7 +281,7 @@ namespace MvcWebRole1.Controllers
             }
             catch (Exception e)  // Создаем нового
             {
-                Client client = VKWorker.getClientById(idVk, sa);
+                Client client = VKWorker.getClientById(idVk, sa.ID_USER);
                 db.Clients.Add(client);
                 db.SaveChanges();
                 return client;
@@ -502,13 +502,13 @@ namespace MvcWebRole1.Controllers
             while (jtoken != null);
             return clients;
         }
-        public static Client getClientById(String id, SocAccount sa)
+        public static Client getClientById(String id, int ID_USER)
         {
             if (Int64.Parse(id) < 0)
                 return null;
             WebClient wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate,sex&access_token=" + sa.TOKEN + "&user_ids=" + id);
+            String answer = wc.DownloadString("https://api.vk.com/method/users.get?fields=bdate,sex&user_ids=" + id);
             JObject obj = JObject.Parse(answer);
             JToken jtoken = obj["response"].First;
             String name = jtoken["first_name"].ToString() + " " + jtoken["last_name"];
@@ -544,7 +544,7 @@ namespace MvcWebRole1.Controllers
             DateTime time_come = DateTime.Now;
             DateTime time_leave = new DateTime(0001, 01, 01);
             int sex = (int)jtoken["sex"];
-            Client client = new Client(sa.ID_USER, name, birthday, 0, vkId, "-1", time_come, "", time_leave, sex);
+            Client client = new Client(ID_USER, name, birthday, 0, vkId, "-1", time_come, "", time_leave, sex);
             jtoken = jtoken.Next;
             return client;
         }
@@ -722,7 +722,7 @@ namespace MvcWebRole1.Controllers
 
     public static class ClientWorker
     {
-        public static Client addNewClient(String ID_VK, String ID_FB, String MAIL, String MOBILE_NUMBER,int USER_ID)
+        public static Client addNewClient(String ID_VK, String ID_FB, String MAIL, String MOBILE_NUMBER, int ID_USER)
         {
             //todo sa от которого делаются запросы к соцкам выбираются как-то мутно. А если их много?
             DatabaseContext db = new DatabaseContext();
@@ -730,18 +730,18 @@ namespace MvcWebRole1.Controllers
             bool isNewClient = true;
             if (ID_VK!=null)
             {
-                SocAccount sa = db.SocAccounts.Where(s => s.ID_USER == USER_ID && s.SOCNET_TYPE == 0).Single();
-                if (db.Clients.Where(c => c.ID_VK == ID_VK).Count() < 0)
-                    client = VKWorker.getClientById(ID_VK, sa);
+                if (db.Clients.Where(c => c.ID_VK == ID_VK).Count() == 0)
+                {
+                    client = VKWorker.getClientById(ID_VK, ID_USER);
+                }
                 else
-                { 
+                {
                     client = db.Clients.Where(c => c.ID_VK == ID_VK).Single();
                     isNewClient = false;
                 }
             }
             if (ID_FB != null)
             {
-                SocAccount sa = db.SocAccounts.Where(s => s.ID_USER == USER_ID && s.SOCNET_TYPE == 1).Single();
                 /*if (db.Clients.Where(c => c.ID_FB == ID_FB).Count() < 0)
                     client = FBWorker.getClientById(ID_VK, sa);
                 else
@@ -758,6 +758,16 @@ namespace MvcWebRole1.Controllers
                 db.Clients.Add(client);
             }
             db.SaveChanges();
+            return client;
+        }
+        public static Client findClientByParams(String ID_VK, String ID_FB)
+        {
+            DatabaseContext db = new DatabaseContext();
+            if(ID_VK!=null)
+                return db.Clients.Where(c => c.ID_VK == ID_VK).Single();
+            if(ID_FB!=null)
+                return db.Clients.Where(c => c.ID_FB == ID_VK).Single();
+            return null;
         }
     }
 }
