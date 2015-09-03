@@ -1,0 +1,22 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+    <div>
+@using (Html.BeginForm("PostFileInStorage", "Storage", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <input type="file" name="fileBase" />
+    <input type="text" name="containerName" placeholder="Название контейнера">
+    <input type="submit" value="Загрузить" />
+}
+    </div>
+</body>
+</html>

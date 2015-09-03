@@ -3,7 +3,7 @@
   <Role name="MvcWebRole1">
     <Instances count="1" />
     <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=storagesaas4;AccountKey=8rXK4INcb7SjQzRjc5MmoPJXcw0m3FPNgc72vhpULQyU+NW2+TFeblabfz1Nj7/PouKf47btg8ebby99uI9H7w==" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>
