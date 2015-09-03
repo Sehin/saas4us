@@ -23,9 +23,22 @@ namespace MvcWebRole1.Models
         public DbSet<ClientComment> ClientComments { get; set; }
 
         public DbSet<MarkProgram> MarkPrograms { get; set; }
-        public DbSet<Trigger> Triggers { get; set; }
-        public DbSet<TriggerT1> TriggersT1 { get; set; }
-        public DbSet<ClientInMP> ClientInMp { get; set; }
+        public DbSet<T1Trigger> T1Trigger{ get; set; }
+        public DbSet<T3Trigger> T3Trigger { get; set; }
+        public DbSet<ClientInMP> ClientInMps { get; set; }
+        public DbSet<Arrows> Arrows { get; set; }
+        public DbSet<T1Arrow> T1Arrow { get; set; }
+        public DbSet<T2Arrow> T2Arrow { get; set; }
+        public DbSet<Action> Actions { get; set; }
+        public DbSet<T1Action> T1Actions { get; set; }
+        public DbSet<T2Action> T2Actions { get; set; }
+
+        public DbSet<Job> Jobs { get; set; }
+        public DbSet<JobCollection> JobCollections { get; set; }
+
+
+
+        public DbSet<Subscriber> Subscribers { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             //modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();

@@ -26,6 +26,8 @@ namespace MvcWebRole1.Models
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Email { get; set; }
+        public string Email_sender { get; set; }
+        public string Email_sender_pass { get; set; }
     }
     
     [Table("UserProfile")]
