@@ -1,14 +1,22 @@
-﻿@model int
-
+﻿
 @{
-    ViewBag.Title = "addMP";
-    Layout = "~/Views/MPTest/Layout_.cshtml";
+    MvcWebRole1.Models.DatabaseContext db = new MvcWebRole1.Models.DatabaseContext();
+    int ID_PR = Int16.Parse(TempData["ID_PR"].ToString());
+    var mpName = db.MarkPrograms.Where(m => m.ID_PR == ID_PR).Select(m => m.name).Single();
 }
+<div id="results">
+    <h3>Добавить триггер для <b>@mpName</b></h3>
+    <hr />
+        @using (Ajax.BeginForm("SelectTriggerType", "MPTest", new AjaxOptions { UpdateTargetId = "results" }))
+        {
+            <select name="triggerType">
+                <option value="1">Инфо лида</option>
+                <option value="2">Социальный</option>
+                <option value="3">Действие на сайте</option>
+            </select>
+            <input type="submit" value="Выбрать" />
+        }
+</div>
 
-<h2>addMP</h2>
 
-@using (Html.BeginForm("addNewTrigger"))
-{
-    <input type="text" name="MPName" placeholder="Marketing programm name" />
-    <input type="button" value="Продолжить" />
-}
+

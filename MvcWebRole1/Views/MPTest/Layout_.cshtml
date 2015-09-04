@@ -3,8 +3,11 @@
 }
 
 <!DOCTYPE html>
-<script type="text/javascript" src="~/Scripts/jquery-2.1.4.js"></script>
-<script type="text/javascript" src="~/Scripts/bootstrap.js"></script>
+<link rel="stylesheet" type="text/css" href="~/Content/bootstrap.css">
+<script src="~/Scripts/jquery-2.1.4.js"></script>
+<script src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
+<script src="~/Scripts/bootstrap.js"></script>
+
 
 <html>
 <head>
@@ -12,8 +15,14 @@
     <title>Создания тестового сценария</title>
 </head>
 <body>
-    <div>
-        @RenderBody()
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <center>
+                @RenderBody()
+            </center>
+        </div>
+        <div class="col-md-4"></div>
     </div>
 </body>
 </html>

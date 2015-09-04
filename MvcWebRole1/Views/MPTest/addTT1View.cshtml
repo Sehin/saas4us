@@ -1,0 +1,16 @@
+﻿@{
+    MvcWebRole1.Models.DatabaseContext db = new MvcWebRole1.Models.DatabaseContext();
+}
+<div id="results">
+    <h3>Добавить триггер для <b>@TempData["ID_PR"]</b></h3>
+    <hr />
+    @using (Ajax.BeginForm("SelectTriggerType", "MPTest", new AjaxOptions { UpdateTargetId = "results" }))
+    {
+        <select name="triggerType">
+            <option value="1">Инфо лида</option>
+            <option value="2">Социальный</option>
+            <option value="3">Действие на сайте</option>
+        </select>
+        <input type="submit" value="Выбрать" />
+    }
+</div>

@@ -14,9 +14,10 @@ namespace MvcWebRole1.Models
         public int ID_USER { get; set; }
         public String name { get; set; }
         public MarkProgram() { }
-        public MarkProgram(String name)
+        public MarkProgram(String name,int ID_USER)
         {
             this.name = name;
+            this.ID_USER = ID_USER;
         }
     }
     public class T1Trigger
