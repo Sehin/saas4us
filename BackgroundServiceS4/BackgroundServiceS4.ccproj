@@ -54,7 +54,7 @@
     <DiagnosticsConfiguration Include="MvcWebRole1Content\diagnostics.wadcfgx" />
   </ItemGroup>
   <ItemGroup>
-    <PublishProfile Include="Profiles\Saas4Production.azurePubxml" />
+    <PublishProfile Include="Profiles\backgroundservices4Production.azurePubxml" />
   </ItemGroup>
   <!-- Import the target files for this project template -->
   <PropertyGroup>

@@ -29,6 +29,16 @@ namespace MvcWebRole1.Models
         public int CL_AGE { get; set; }
         public int CL_SEX { get; set; }
         public int CL_AGE_SIGN { get; set; }
+        public T1Trigger()
+        { }
+        public T1Trigger(int ID_PR, int CL_TYPE, int CL_AGE, int CL_SEX, int CL_AGE_SIGN)
+        {
+            this.ID_PR = ID_PR;
+            this.CL_TYPE = CL_TYPE;
+            this.CL_AGE = CL_AGE;
+            this.CL_SEX = CL_SEX;
+            this.CL_AGE_SIGN = CL_AGE_SIGN;
+        }
     }
     public class T3Trigger
     {

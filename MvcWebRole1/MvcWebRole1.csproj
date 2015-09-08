@@ -286,10 +286,8 @@
     <Content Include="Content\Site.css" />
     <Content Include="NLog.config" />
     <None Include="NLog.xsd" />
-    <None Include="Properties\PublishProfiles\backgrounds4 %282%29.pubxml" />
-    <None Include="Properties\PublishProfiles\backgroundS4 last.pubxml" />
-    <None Include="Properties\PublishProfiles\backgroundS4.pubxml" />
-    <None Include="Properties\PublishProfiles\s4background.pubxml" />
+    <None Include="Properties\PublishProfiles\backgrounds4u.pubxml" />
+    <None Include="Properties\PublishProfiles\backgroundserviceS4.pubxml" />
     <None Include="Scripts\jquery-2.1.4.intellisense.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
@@ -329,6 +327,7 @@
     <Content Include="Views\MPTest\Layout_.cshtml" />
     <Content Include="Views\MPTest\addMP.cshtml" />
     <Content Include="Views\MPTest\addTT1View.cshtml" />
+    <Content Include="Views\MPTest\trigger.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -55,7 +55,7 @@ namespace MvcWebRole1.Controllers
             {
                 ActionWorker.doSplitterArrowStep(arrows[0].ID_ARROW);
             }
-            else
+            else if (arrows.Count == 1)
             {
                 ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
             }
@@ -81,7 +81,7 @@ namespace MvcWebRole1.Controllers
             {
                 ActionWorker.doSplitterArrowStep(arrows[0].ID_ARROW);
             }
-            else
+            else if (arrows.Count == 1)
             {
                 ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
             }
@@ -121,7 +121,6 @@ namespace MvcWebRole1.Controllers
             message.From = new MailAddress(email);
             message.Subject = content.CONTENT_TITLE;
             message.Body = content.CONTENT_TEXT;
-            String adresses = "";
             List<int> clientIds = new List<int>();
             foreach (ClientInMP cimp in db.ClientInMps.Where(c=>c.ID_ACTION==ID_ACTION))
             {
@@ -130,11 +129,9 @@ namespace MvcWebRole1.Controllers
             foreach(int id in clientIds)
             {
                 String mail = db.Clients.Where(c => c.ID_CL == id).Select(c => c.MAIL).Single();
-                adresses += mail + ",";
+                message.To.Add(mail);
+                Smtp.Send(message);
             }
-            adresses = adresses.Remove(adresses.Count()-1);
-            message.To.Add(adresses);
-            Smtp.Send(message);//отправка
 
 
             List<Arrows> arrows = db.Arrows.Where(a => a.ID_FROM == ID_ACTION).ToList();
@@ -142,7 +139,7 @@ namespace MvcWebRole1.Controllers
             {
                 ActionWorker.doSplitterArrowStep(arrows[0].ID_ARROW);
             }
-            else
+            else if (arrows.Count == 1)
             {
                 ActionWorker.doNextArrowStep(arrows[0].ID_ARROW);
             }

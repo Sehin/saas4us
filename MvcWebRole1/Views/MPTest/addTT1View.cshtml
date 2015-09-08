@@ -1,16 +1,38 @@
 ﻿@{
     MvcWebRole1.Models.DatabaseContext db = new MvcWebRole1.Models.DatabaseContext();
+    String mpName = MvcWebRole1.Controllers.mpGlVar.PR_NAME;
 }
 <div id="results">
-    <h3>Добавить триггер для <b>@TempData["ID_PR"]</b></h3>
+    <h3>Добавить триггер типа T1 для <b>@mpName</b></h3>
     <hr />
     @using (Ajax.BeginForm("SelectTriggerType", "MPTest", new AjaxOptions { UpdateTargetId = "results" }))
     {
-        <select name="triggerType">
-            <option value="1">Инфо лида</option>
-            <option value="2">Социальный</option>
-            <option value="3">Действие на сайте</option>
+        <select name="ageSign">
+            <option value="0">></option>
+            <option value="1"><</option>
+            <option value="2">=</option>
+            <option value="-1">Any</option>
         </select>
+        <input type="text" name="age" placeholder="кол-во лет" />
+        <br />
+    <b>Choose type</b>
+        <select name="type">
+            <option value="0">New</option>
+            <option value="1">Mature</option>
+            <option value="2">Sell</option>
+            <option value="3">Post</option>
+            <option value="4">Need-to-classity</option>
+            <option value="-1">Any</option>
+        </select>
+        <br />
+    <b>Choose sex</b>
+    <select name="sex">
+        <option value="0">Don't know</option>
+        <option value="1">M</option>
+        <option value="2">F</option>
+        <option value="-1">Any</option>
+    </select>
+        <br />
         <input type="submit" value="Выбрать" />
     }
 </div>

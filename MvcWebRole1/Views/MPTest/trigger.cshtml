@@ -1,0 +1,47 @@
+﻿@using MvcWebRole1.Models
+@using MvcWebRole1.Controllers
+@{
+    Layout = "~/Views/MPTest/Layout_.cshtml";
+    DatabaseContext db = new DatabaseContext();
+}
+<div id="results">
+    <h1>Настройка триггера</h1>
+    <hr />
+    <h3>Действия</h3>
+    @{
+        var arrows = db.Arrows.Where(a => a.ID_FROM == mpGlVar.ID_ACTION);
+        if (arrows.Count()>1)
+        {
+            // Splitters random
+            foreach (var arrow in arrows)
+            {
+                T1Arrow t1 = db.T1Arrow.Where(a => a.ID_ARROW == arrow.ID_ARROW).Single();
+                <div>
+                    <h4>Random splitter chance = @t1.CHANCE</h4>
+                    @using(Html.BeginForm("action","MPtest",new {ID_ACTION = arrow.ID_TO}))
+                    {
+                        <input type="submit" value="Перейти к действию" />
+                    }
+                </div>
+            }
+        }
+        else if (arrows.Count()==1)
+        {
+            // One splitter
+        }
+        else
+        {
+            // No splitters
+        }
+    }
+    <h3>Добава</h3>
+    @using (Ajax.BeginForm("addMP", "MPTest", new AjaxOptions { UpdateTargetId = "results" }))
+    {
+        <input type="text" name="MPName" placeholder="Marketing programm name" />
+        <br />
+        <input type="text" name="ID_USER" placeholder="Your user ID" />
+        <br />
+        <input type="submit" value="Продолжить" />
+
+    }
+</div>

@@ -1,8 +1,6 @@
-﻿
-@{
+﻿@{
     MvcWebRole1.Models.DatabaseContext db = new MvcWebRole1.Models.DatabaseContext();
-    int ID_PR = Int16.Parse(TempData["ID_PR"].ToString());
-    var mpName = db.MarkPrograms.Where(m => m.ID_PR == ID_PR).Select(m => m.name).Single();
+    String mpName = MvcWebRole1.Controllers.mpGlVar.PR_NAME;
 }
 <div id="results">
     <h3>Добавить триггер для <b>@mpName</b></h3>
