@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using System.Web.Mvc;
+using TweetSharp;
 
 namespace MvcWebRole1.Controllers
 {
@@ -144,7 +146,7 @@ namespace MvcWebRole1.Controllers
         // Метод, который анализирует лайки и комментарии VK
         public void updateVkActions()
         {
-            int contentCount = 20; // КОЛИЧЕСТВО ПОСТОВ, КОТОРЫЕ БУДУТ БРАТЬСЯ ПОСЛЕДНИМИ ИЗ ГРУПП ДЛЯ ДОБАВЛЕНИЯ ИНФЫ О l/c/r
+            int contentCount = 100; // КОЛИЧЕСТВО ПОСТОВ, КОТОРЫЕ БУДУТ БРАТЬСЯ ПОСЛЕДНИМИ ИЗ ГРУПП ДЛЯ ДОБАВЛЕНИЯ ИНФЫ О l/c/r
             DatabaseContext db = new DatabaseContext();
 
             updateContentInGroups();
@@ -231,7 +233,7 @@ namespace MvcWebRole1.Controllers
                         }
                     }
                     #endregion
-
+                    
                     #region comments
                     List<Tuple<String, int>> commentIdsForPost = VKWorker.getCommentIdsFromPost(group.ID_GROUP, cig.ID_POST);
 
@@ -250,7 +252,7 @@ namespace MvcWebRole1.Controllers
                         else
                         {
                             Client client = db.Clients.Where(c => c.ID_VK == tpl.Item1).Single();  // Exception если нет
-                            int a = db.ClientReposts.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
+                            int a = db.ClientComments.Where(c => c.ID_CL == client.ID_CL && c.ID_CIG == cig.ID_CIG).Count();
                             if (a == 0)
                             {
                                 ClientComment clC = new ClientComment(cig.ID_CIG, client.ID_CL, tpl.Item2);
@@ -267,6 +269,36 @@ namespace MvcWebRole1.Controllers
 
 
 
+        }
+
+        public void updateTWClients()
+        {
+            DatabaseContext db = new DatabaseContext();
+            var socAccs = db.SocAccounts.Where(s => s.SOCNET_TYPE == 2);
+            foreach (SocAccount sa in socAccs)
+            {
+                String Token = sa.TOKEN.Split(' ')[0];
+                String TokenSecret = sa.TOKEN.Split(' ')[1];
+
+                String TwitterConsumerKey = ConfigurationManager.AppSettings["TwitterConsumerKey"];
+                String TwitterConsumerSecret = ConfigurationManager.AppSettings["TwitterConsumerSecret"];
+
+                TwitterService service = new TwitterService(TwitterConsumerKey, TwitterConsumerSecret);
+
+                service.AuthenticateWith(Token, TokenSecret);
+
+                ListRetweetsOfMyTweetsOptions opt = new ListRetweetsOfMyTweetsOptions();
+                opt.IncludeUserEntities = true;
+                opt.IncludeEntities = true;
+
+                service.IncludeRetweets = true;
+
+                var retweets = service.ListRetweetsOfMyTweets(opt);
+                foreach (TwitterStatus ts in retweets)
+                {
+                    var q = ts.User.Id;
+                }
+            }
         }
 
         public Client addNewClientByVKId(String idVk, SocAccount sa)
