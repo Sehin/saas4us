@@ -243,7 +243,7 @@ namespace MvcWebRole1.Controllers
             T1Trigger t1 = db.T1Trigger.Where(t => t.ID_TT1 == 2).Single();
             List<int> firstArrowsIds = getFirstArrowsIds(t1.ID_PR);
             List<List<int>> qwerty = getSplittedIds(ids, firstArrowsIds);*/
-            TriggerWorker.getNewT3Token();
+            
         }
         public List<int> getFirstArrowsIds(int ID_PR)
         {
@@ -251,6 +251,7 @@ namespace MvcWebRole1.Controllers
             return db.Arrows.Where(a => a.ID_PR == ID_PR && a.ID_FROM == 1).Select(a => a.ID_ARROW).ToList();
 
         }
+        
         public List<List<int>> getSplittedIds(List<int> ids, List<int> arrowIds)
         {
             DatabaseContext db = new DatabaseContext();
@@ -293,7 +294,72 @@ namespace MvcWebRole1.Controllers
             }
             return splittedList;
         }
-    
+       /* public List<List<int>> getSplittedIds_new(List<int> ids, List<int> arrowIds)
+        {
+            List<List<int>> splittedIds = new List<List<int>>();
+            DatabaseContext db = new DatabaseContext();
+            List<double> chances = new List<double>();
+
+            List<int> firstAIds = new List<int>();
+
+            foreach (int id in arrowIds)
+            {
+                chances.Add(db.T1Arrow.Where(a => a.ID_ARROW == id).Select(a => a.CHANCE).Single());
+            }
+            // Получили массив с процентами (в сумме должно быть 100 :) )
+
+            List<int> randomChances = getRandomChances(ids.Count);
+
+            for (int i = 0; i < ids.Count;i++)
+            {
+                
+            }
+
+                return null;
+        }
+
+
+        public List<int> getRandomChances(int count)
+        {
+            List<int> chances = new List<int>();
+            for (int i = 0; i < count; i++)
+            {
+                Random q = new Random(DateTime.Now.Millisecond);
+                int chance = q.Next(0, 100);
+
+                if(i>0)
+                {
+                    if (chance != chances[i - 1])
+                        chances.Add(chance);
+                    else
+                    {
+                        i--;
+                        continue;
+                    }
+                }
+                if (i == 0)
+                    chances.Add(chance);
+            }
+            return chances;
+
+        }
+        public int associateChanceWithSplitterChances(int chance, List<double> chances)
+        {
+            
+            for (int i=0;i<chances.Count;i++)
+            {
+                int sum = 0;
+                sum += chances[i];
+                if (chance<chances[i])
+                {
+                    return i;
+                }
+                else
+                {
+
+                }
+            }
+        }*/
     }
 public static class TriggerWorker
 {

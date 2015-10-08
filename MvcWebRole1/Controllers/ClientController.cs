@@ -59,7 +59,7 @@ namespace MvcWebRole1.Controllers
             DatabaseContext db = new DatabaseContext();
             List<SocAccount> socAccs = db.SocAccounts.Where(s => s.SOCNET_TYPE == 0).ToList();
             List<MvcWebRole1.Models.Group> groups = new List<MvcWebRole1.Models.Group>();
-
+            
             foreach (SocAccount sa in socAccs)  // с каждого соцАккаунта берем все группы и подгружаем их в общий лист
             {
                 groups.AddRange(db.Groups.Where(g => g.ID_AC == sa.ID_AC).ToList());
@@ -69,14 +69,8 @@ namespace MvcWebRole1.Controllers
             {
                 List<String> ids = VKWorker.getGroupSubscribersIds(group.ID_GROUP);
                 SocAccount sa = db.SocAccounts.Where(g => g.ID_AC == group.ID_AC).Single();
-
                 #region Отсеиваем только новых клиентов
-                List<Client> clients = db.Clients.ToList(); // Получение списка всех клиентов
-                List<String> clientIds = new List<String>();
-                foreach (Client client in clients)
-                {
-                    clientIds.Add(client.ID_VK);
-                }
+                List<String> clientIds = db.Clients.Where(c=>c.ID_USER==sa.ID_USER).Select(c => c.ID_VK).ToList();// Получение списка всех клиентов
 
                 List<String> idsToRemove = new List<String>();
                 for (int i = 0; i < ids.Count; i++)
@@ -103,11 +97,14 @@ namespace MvcWebRole1.Controllers
                     if (isLeave)
                     {
                         String clId = clientIds[i];
-                        Client client = db.Clients.Where(c => c.ID_VK == clId).Single();
-                        DateTime tl = new DateTime(0001, 01, 01);
-                        if (client.DATE_LEAVE.Equals(tl))
+                        if (!clId.Equals("-1"))
                         {
-                            client.DATE_LEAVE = DateTime.Now;
+                            Client client = db.Clients.Where(c => c.ID_VK == clId).Single();
+                            DateTime tl = new DateTime(0001, 01, 01);
+                            if (client.DATE_LEAVE.Equals(tl))
+                            {
+                                client.DATE_LEAVE = DateTime.Now;
+                            }
                         }
                     }
                 }
@@ -151,7 +148,6 @@ namespace MvcWebRole1.Controllers
 
             updateContentInGroups();
 
-
             // Получаем Like/Comment/Repost за последние N CIG.
             List<SocAccount> socAccs = db.SocAccounts.Where(s => s.SOCNET_TYPE == 0).ToList();
             List<MvcWebRole1.Models.Group> groups = new List<MvcWebRole1.Models.Group>();
@@ -165,7 +161,12 @@ namespace MvcWebRole1.Controllers
             {
                 List<ContentInGroup> lastNCigs = new List<ContentInGroup>();
                 List<ContentInGroup> cigs = db.ContentsInGroups.Where(c => c.ID_GROUP == group.ID).ToList();
-                for (int i = 0; i < contentCount; i++)
+                int counter = 0;
+                if (cigs.Count < contentCount)
+                    counter = cigs.Count;
+                else
+                    counter = contentCount;
+                for (int i = 0; i < counter; i++)
                 {
                     ContentInGroup latestCig = new ContentInGroup(0, 0, 0, new DateTime(1, 1, 1));
                     foreach (ContentInGroup cig in cigs)
